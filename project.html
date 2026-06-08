@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Project — Shamak G.</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+    onload="window._katexReady=true; if(window._katexCallback) window._katexCallback()"></script>
+  <style>
+    :root {
+      --dark-bg:      #0a1a0a;
+      --dark-bg-2:    #122012;
+      --lime:         #b8e04a;
+      --green:        #4aa84a;
+      --green-dark:   #2d7a3a;
+      --text-light:   #d4e8b0;
+      --text-muted:   #7a9e60;
+      --mat:          #a3ce6b;
+      --font-display: 'Space Grotesk', sans-serif;
+      --font-body:    'Inter', sans-serif;
+      --font-mono:    'Space Mono', monospace;
+      --max-w:        1020px;
+      --pad:          2.5rem;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: var(--font-body);
+      background: var(--dark-bg);
+      color: var(--text-light);
+      min-height: 100vh;
+    }
+    body.theme-auv { --accent: #3fc0b0; }
+    body:not(.theme-auv) { --accent: var(--green); }
+
+    /* ── NAV ─────────────────────────────────────────────────────── */
+    #proj-nav {
+      position: sticky; top: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0.9rem var(--pad);
+      background: rgba(12,28,12,0.95);
+      backdrop-filter: blur(14px);
+      border-bottom: 1px solid rgba(74,168,74,0.1);
+    }
+    .back-link {
+      font-family: var(--font-display);
+      font-size: 0.82rem; font-weight: 600;
+      color: var(--text-muted); text-decoration: none;
+      display: flex; align-items: center; gap: 0.45rem;
+      transition: color 0.2s;
+    }
+    .back-link:hover { color: var(--lime); }
+    .nav-logo { font-family: var(--font-display); font-size: 1rem; font-weight: 700; color: var(--lime); }
+
+    /* ── HEADER: centered title + photo below ────────────────────── */
+    #proj-header {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 3rem var(--pad) 2.4rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+
+    .proj-eyebrow {
+      font-family: var(--font-mono);
+      font-size: 0.62rem; font-weight: 400;
+      color: var(--accent);
+      letter-spacing: 3.5px;
+      text-transform: uppercase;
+      margin-bottom: 0.7rem;
+    }
+
+    .proj-title {
+      font-family: var(--font-display);
+      font-size: clamp(1.8rem, 3.5vw, 2.7rem);
+      font-weight: 700;
+      color: var(--text-light);
+      line-height: 1.1;
+      margin-bottom: 0.4rem;
+    }
+
+    .proj-subtitle {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: rgba(212,232,176,0.38);
+      margin-bottom: 1.4rem;
+    }
+
+    .proj-tech-tags {
+      display: flex; flex-wrap: wrap; gap: 0.35rem;
+      justify-content: center;
+      margin-bottom: 1.4rem;
+    }
+    .proj-tag {
+      font-family: var(--font-mono);
+      font-size: 0.6rem;
+      color: var(--accent);
+      border: 1px solid rgba(74,168,74,0.25);
+      padding: 0.2rem 0.5rem;
+      border-radius: 2px;
+    }
+    body.theme-auv .proj-tag { border-color: rgba(63,192,176,0.28); }
+
+    .proj-links { display: flex; gap: 0.6rem; flex-wrap: wrap; justify-content: center; margin-bottom: 2rem; }
+    .proj-btn {
+      font-family: var(--font-display);
+      font-size: 0.78rem; font-weight: 600;
+      text-decoration: none;
+      padding: 0.55rem 1.2rem;
+      border-radius: 2px;
+      display: inline-flex; align-items: center; gap: 0.3rem;
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .proj-btn--primary {
+      background: var(--lime); color: var(--dark-bg);
+      box-shadow: 3px 3px 0 var(--green-dark);
+    }
+    .proj-btn--primary:hover { transform: translate(-2px,-2px); box-shadow: 5px 5px 0 var(--green-dark); }
+    .proj-btn--ghost { color: var(--lime); border: 1.5px solid rgba(184,224,74,0.32); }
+    .proj-btn--ghost:hover { border-color: var(--lime); background: rgba(184,224,74,0.06); }
+
+    /* Hero photo */
+    .proj-hero-photo {
+      width: 100%;
+      max-width: 460px;
+      border-radius: 4px;
+      overflow: hidden;
+      border: 1px solid rgba(74,168,74,0.18);
+      cursor: pointer;
+      transition: border-color 0.22s, box-shadow 0.22s;
+      position: relative;
+      box-shadow: 12px 12px 0 var(--mat);
+    }
+    body.theme-auv .proj-hero-photo { border-color: rgba(63,192,176,0.2); }
+    .proj-hero-photo:hover { border-color: rgba(184,224,74,0.5); box-shadow: 12px 12px 0 var(--mat), 0 8px 30px rgba(0,0,0,0.5); }
+    .proj-hero-photo img { width: 100%; display: block; aspect-ratio: 4/3; object-fit: cover; }
+    .proj-hero-photo .zoom-hint {
+      position: absolute; bottom: 0.5rem; right: 0.6rem;
+      font-size: 0.65rem;
+      background: rgba(12,28,12,0.8);
+      border: 1px solid rgba(74,168,74,0.2);
+      color: rgba(212,232,176,0.6);
+      padding: 0.18rem 0.38rem; border-radius: 2px;
+      opacity: 0; transition: opacity 0.2s; pointer-events: none;
+    }
+    .proj-hero-photo:hover .zoom-hint { opacity: 1; }
+
+    /* ── DIVIDER ─────────────────────────────────────────────────── */
+    .section-divider {
+      max-width: var(--max-w);
+      margin: 0 auto;
+      padding: 0 var(--pad);
+    }
+    .divider-line {
+      border: none;
+      border-top: 1px solid rgba(74,168,74,0.12);
+      margin: 0;
+    }
+
+    /* ── ABOUT ───────────────────────────────────────────────────── */
+    #proj-about {
+      max-width: var(--max-w);
+      margin: 0 auto;
+      padding: 2rem var(--pad) 2.2rem;
+    }
+    .section-label {
+      font-family: var(--font-display);
+      font-size: 0.82rem; font-weight: 700;
+      color: var(--text-light);
+      margin-bottom: 1rem;
+    }
+    .about-body {
+      display: grid;
+      grid-template-columns: 1fr 240px;
+      gap: 2.2rem;
+      align-items: start;
+    }
+    .proj-long-desc {
+      font-family: var(--font-body);
+      font-size: 0.875rem; line-height: 1.95;
+      color: var(--text-muted);
+    }
+    .proj-long-desc p { margin-bottom: 0.9rem; }
+    .proj-long-desc p:last-child { margin-bottom: 0; }
+    .about-side-img {
+      border-radius: 4px; overflow: hidden;
+      border: 1px solid rgba(74,168,74,0.15);
+      cursor: pointer;
+      transition: border-color 0.22s, box-shadow 0.22s;
+      box-shadow: 9px 9px 0 var(--mat);
+    }
+    body.theme-auv .about-side-img { border-color: rgba(63,192,176,0.18); }
+    .about-side-img:hover { border-color: rgba(184,224,74,0.4); box-shadow: 9px 9px 0 var(--mat), 0 4px 18px rgba(0,0,0,0.4); }
+    .about-side-img img { width: 100%; display: block; object-fit: cover; aspect-ratio: 3/4; }
+
+    /* ── TECHNICAL DETAILS ───────────────────────────────────────── */
+    #proj-tech {
+      max-width: var(--max-w);
+      margin: 0 auto;
+      padding: 1.8rem var(--pad) 0.5rem;
+    }
+    .tech-header {
+      display: flex; align-items: center; gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    .tech-header-title {
+      font-family: var(--font-display);
+      font-size: 0.85rem; font-weight: 700;
+      color: var(--text-light);
+      white-space: nowrap;
+    }
+    .tech-header-rule {
+      flex: 1; height: 1px;
+      background: rgba(74,168,74,0.18);
+    }
+
+    /* Section block */
+    .tech-section { margin-bottom: 2.5rem; }
+
+    .section-tag {
+      display: inline-block;
+      font-family: var(--font-display);
+      font-size: 0.64rem; font-weight: 700;
+      padding: 0.28rem 0.85rem;
+      border-radius: 4px;
+      background: #172e1c;
+      border: 1px solid rgba(74,168,74,0.55);
+      color: #b8e04a;
+      margin-bottom: 1.1rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+    body.theme-auv .section-tag {
+      background: #0e2a28 !important;
+      border-color: rgba(63,192,176,0.6) !important;
+      color: #5dd8ca !important;
+    }
+
+    .tech-section-inner {
+      display: grid;
+      grid-template-columns: 360px 1fr;
+      gap: 2rem;
+      align-items: start;
+    }
+    /* When a side image is present, add a third column to the right */
+    .tech-section-inner.has-side {
+      grid-template-columns: 340px 1fr 200px;
+    }
+
+    /* Images column */
+    .tech-imgs { display: flex; flex-direction: column; gap: 0.9rem; }
+    .tech-img {
+      width: 100%; display: block;
+      border-radius: 3px;
+      border: 1px solid rgba(74,168,74,0.18);
+      background: var(--dark-bg);
+      cursor: pointer;
+      box-shadow: 7px 7px 0 var(--mat);
+      transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
+    }
+    body.theme-auv .tech-img { border-color: rgba(63,192,176,0.18); }
+    .tech-img:hover {
+      border-color: rgba(184,224,74,0.5);
+      transform: translateY(-2px);
+      box-shadow: 7px 7px 0 var(--mat), 0 6px 22px rgba(0,0,0,0.45);
+    }
+
+    /* Text column */
+    .tech-text-col { display: flex; flex-direction: column; gap: 1rem; }
+    .tech-body {
+      font-family: var(--font-body);
+      font-size: 0.875rem; line-height: 1.95;
+      color: var(--text-muted);
+    }
+    .tech-body p { margin-bottom: 0.9rem; }
+    .tech-body p:last-child { margin-bottom: 0; }
+    .tech-body strong { color: var(--text-light); font-weight: 600; }
+    .tech-side-img {
+      cursor: pointer;
+      overflow: hidden;
+      align-self: start;
+      transition: border-color 0.22s, box-shadow 0.22s;
+    }
+
+    /* Circular variant — compass */
+    .tech-side-img.round {
+      align-self: center;
+      width: 100%;
+      max-width: 180px;
+      border-radius: 50%;
+      border: 3px solid rgba(74,168,74,0.22);
+      box-shadow: 8px 8px 0 var(--mat);
+    }
+    body.theme-auv .tech-side-img.round { border-color: rgba(63,192,176,0.28); }
+    .tech-side-img.round:hover { border-color: rgba(184,224,74,0.5); box-shadow: 8px 8px 0 var(--mat), 0 4px 20px rgba(0,0,0,0.5); }
+
+    /* Rectangular variant — photo */
+    .tech-side-img.rect {
+      border-radius: 4px;
+      border: 1px solid rgba(74,168,74,0.18);
+      width: 100%;
+      box-shadow: 8px 8px 0 var(--mat);
+    }
+    body.theme-auv .tech-side-img.rect { border-color: rgba(63,192,176,0.2); }
+    .tech-side-img.rect:hover { border-color: rgba(184,224,74,0.45); box-shadow: 8px 8px 0 var(--mat), 0 4px 20px rgba(0,0,0,0.5); }
+
+    .tech-side-img img { width: 100%; display: block; height: 100%; object-fit: cover; }
+
+    /* ── FEATURED IMAGE ──────────────────────────────────────────── */
+    #proj-featured {
+      max-width: var(--max-w);
+      margin: 1.5rem auto 0.5rem;
+      padding: 0 var(--pad);
+    }
+    #proj-featured-img {
+      width: 100%; display: block;
+      border-radius: 4px;
+      border: 1px solid rgba(74,168,74,0.18);
+      background: var(--dark-bg);
+      cursor: pointer;
+      box-shadow: 12px 12px 0 var(--mat);
+      transition: border-color 0.22s, box-shadow 0.22s;
+    }
+    body.theme-auv #proj-featured-img { border-color: rgba(63,192,176,0.2); }
+    #proj-featured-img:hover { border-color: rgba(184,224,74,0.42); box-shadow: 12px 12px 0 var(--mat), 0 8px 32px rgba(0,0,0,0.5); }
+
+    /* ── RESULT IMAGES ───────────────────────────────────────────── */
+    #proj-results {
+      max-width: var(--max-w);
+      margin: 1rem auto 4rem;
+      padding: 0 var(--pad);
+    }
+    .results-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px,1fr));
+      gap: 0.7rem;
+    }
+    .result-img {
+      width: 100%; display: block;
+      border-radius: 3px;
+      border: 1px solid rgba(74,168,74,0.12);
+      background: var(--dark-bg);
+      cursor: pointer;
+      box-shadow: 6px 6px 0 var(--mat);
+      transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
+    }
+    .result-img:hover { border-color: rgba(184,224,74,0.35); transform: translateY(-1px); box-shadow: 6px 6px 0 var(--mat), 0 6px 18px rgba(0,0,0,0.4); }
+
+    /* ── VIDEOS ──────────────────────────────────────────────────── */
+    #proj-videos {
+      max-width: var(--max-w);
+      margin: 0 auto 3rem;
+      padding: 0 var(--pad);
+    }
+    .video-wrap {
+      position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden;
+      border-radius: 3px; border: 1px solid rgba(74,168,74,0.15); margin-bottom: 1rem;
+    }
+    .video-wrap iframe { position: absolute; top:0; left:0; width:100%; height:100%; border:none; }
+
+    /* Local video grid — centered, smaller so low-res footage isn't stretched */
+    #proj-local-videos {
+      max-width: var(--max-w);
+      margin: 1.5rem auto 0;
+      padding: 0 var(--pad);
+    }
+    .local-videos-grid {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 1.2rem;
+      margin-bottom: 2rem;
+    }
+    .local-video-wrap {
+      flex: 0 0 auto;
+      width: clamp(200px, 30%, 320px);
+      border-radius: 4px;
+      overflow: hidden;
+      border: 1px solid rgba(74,168,74,0.18);
+      box-shadow: 7px 7px 0 var(--mat);
+      background: #000;
+    }
+    .local-video-wrap video {
+      width: 100%; display: block;
+      max-height: 220px;
+      object-fit: contain;
+      background: #000;
+    }
+
+    /* KaTeX display blocks */
+    .katex-display {
+      margin: 0.8rem 0 !important;
+      overflow-x: auto;
+    }
+
+    /* ── LIGHTBOX ────────────────────────────────────────────────── */
+    #lightbox {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.93); z-index: 300;
+      align-items: center; justify-content: center; padding: 2rem;
+    }
+    #lightbox.open { display: flex; animation: lbIn 0.18s ease; }
+    @keyframes lbIn { from { opacity:0; } to { opacity:1; } }
+
+    .lb-inner {
+      max-width: 90vw; max-height: 88vh;
+      display: flex; flex-direction: column; align-items: center; gap: 0.6rem;
+      animation: lbScale 0.2s cubic-bezier(0.34,1.56,0.64,1);
+    }
+    @keyframes lbScale { from { transform:scale(0.9); opacity:0; } to { transform:scale(1); opacity:1; } }
+
+    #lightbox-img {
+      max-width: 100%; max-height: 82vh;
+      object-fit: contain; border-radius: 2px;
+      box-shadow: 0 0 60px rgba(0,0,0,0.65); display: block;
+    }
+    #lightbox-caption {
+      font-family: var(--font-body); font-size: 0.75rem;
+      color: rgba(212,232,176,0.5); text-align: center; min-height: 1em;
+    }
+    #lightbox-close {
+      position: fixed; top: 1.1rem; right: 1.5rem;
+      font-size: 1.3rem; color: rgba(212,232,176,0.5); cursor: pointer;
+      background: rgba(12,28,12,0.7); border: 1px solid rgba(74,168,74,0.2);
+      border-radius: 2px; width: 2.2rem; height: 2.2rem;
+      display: flex; align-items: center; justify-content: center;
+      transition: color 0.2s, background 0.2s; z-index: 301;
+    }
+    #lightbox-close:hover { color: var(--lime); background: rgba(12,28,12,0.92); }
+    .lb-arrow {
+      position: fixed; top: 50%; transform: translateY(-50%);
+      font-size: 1.9rem; color: rgba(212,232,176,0.45); cursor: pointer;
+      background: rgba(12,28,12,0.55); border: 1px solid rgba(74,168,74,0.15);
+      border-radius: 2px; width: 2.6rem; height: 3.8rem;
+      display: flex; align-items: center; justify-content: center;
+      transition: color 0.2s, background 0.2s; z-index: 301; user-select: none;
+    }
+    .lb-arrow:hover { color: var(--lime); background: rgba(12,28,12,0.88); }
+    #lightbox-prev { left: 0.7rem; }
+    #lightbox-next { right: 0.7rem; }
+    .lb-counter {
+      position: fixed; top: 1.3rem; left: 50%; transform: translateX(-50%);
+      font-family: var(--font-mono); font-size: 0.66rem;
+      color: rgba(212,232,176,0.35); letter-spacing: 1px;
+      z-index: 301; pointer-events: none;
+    }
+
+    /* ── PDF EMBED ───────────────────────────────────────────────── */
+    #proj-pdf {
+      max-width: var(--max-w);
+      margin: 2rem auto 4rem;
+      padding: 0 var(--pad);
+    }
+    .pdf-frame-wrap {
+      width: 100%;
+      aspect-ratio: 8.5 / 11;
+      border-radius: 4px;
+      overflow: hidden;
+      border: 1px solid rgba(74,168,74,0.2);
+      box-shadow: 12px 12px 0 var(--mat);
+      background: #111;
+    }
+    .pdf-frame-wrap iframe {
+      width: 100%; height: 100%; border: none; display: block;
+    }
+    .pdf-fallback {
+      margin-top: 1rem;
+      font-family: var(--font-body);
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      text-align: center;
+    }
+    .pdf-fallback a { color: var(--lime); text-decoration: none; }
+    .pdf-fallback a:hover { text-decoration: underline; }
+
+    /* ── FOOTER ──────────────────────────────────────────────────── */
+    footer {
+      background: var(--dark-bg-2);
+      border-top: 1px solid rgba(74,168,74,0.08);
+      text-align: center; padding: 1.4rem;
+      font-family: var(--font-body); font-size: 0.7rem; color: var(--text-muted);
+    }
+
+    /* ── RESPONSIVE ──────────────────────────────────────────────── */
+    @media (max-width: 860px) {
+      .proj-hero-photo img { aspect-ratio: 16/9; }
+      .about-body { grid-template-columns: 1fr; }
+      .about-side-img { order: -1; }
+      .about-side-img img { aspect-ratio: 16/9; }
+      .tech-section-inner,
+      .tech-section-inner.has-side { grid-template-columns: 1fr; }
+      .tech-side-img.rect, .tech-side-img.round { max-width: 260px; }
+      .lb-arrow { display: none; }
+    }
+    @media (max-width: 600px) {
+      :root { --pad: 1.25rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav id="proj-nav">
+    <a href="index.html#projects" class="back-link"><span>←</span> Back to Portfolio</a>
+    <span class="nav-logo">SG</span>
+  </nav>
+
+  <!-- HEADER -->
+  <div id="proj-header">
+    <div>
+      <p class="proj-eyebrow" id="proj-eyebrow">Project</p>
+      <h1 class="proj-title" id="proj-title">Loading…</h1>
+      <p class="proj-subtitle" id="proj-subtitle" style="display:none"></p>
+      <div class="proj-tech-tags" id="proj-tech-tags"></div>
+      <div class="proj-links" id="proj-links"></div>
+    </div>
+    <div class="proj-hero-photo" id="proj-hero-photo" style="display:none">
+      <img id="proj-hero-img" src="" alt="">
+      <span class="zoom-hint">⤢ expand</span>
+    </div>
+  </div>
+
+  <!-- LOCAL VIDEOS (centered, top) -->
+  <div id="proj-local-videos" style="display:none">
+    <div class="local-videos-grid" id="local-videos-grid"></div>
+  </div>
+
+  <!-- DIVIDER -->
+  <div class="section-divider"><hr class="divider-line"></div>
+
+  <!-- ABOUT -->
+  <div id="proj-about">
+    <p class="section-label">About this project</p>
+    <div class="about-body" id="about-body">
+      <p class="proj-long-desc" id="proj-long-desc"></p>
+      <!-- side image injected by JS -->
+    </div>
+  </div>
+
+  <!-- TECHNICAL DETAILS -->
+  <div id="proj-tech" style="display:none">
+    <div class="tech-header">
+      <span class="tech-header-title">Technical Details</span>
+      <div class="tech-header-rule"></div>
+    </div>
+    <div id="tech-list"></div>
+  </div>
+
+  <!-- FEATURED IMAGE -->
+  <div id="proj-featured" style="display:none">
+    <img id="proj-featured-img" src="" alt="">
+  </div>
+
+  <!-- RESULT IMAGES -->
+  <div id="proj-results" style="display:none">
+    <div class="results-grid" id="results-grid"></div>
+  </div>
+
+  <!-- PDF EMBED -->
+  <div id="proj-pdf" style="display:none"></div>
+
+  <!-- VIDEOS -->
+  <div id="proj-videos" style="display:none">
+    <div id="video-list"></div>
+  </div>
+
+  <!-- LIGHTBOX -->
+  <div id="lightbox" role="dialog" aria-modal="true">
+    <button id="lightbox-close" aria-label="Close">✕</button>
+    <button class="lb-arrow" id="lightbox-prev" aria-label="Previous">‹</button>
+    <button class="lb-arrow" id="lightbox-next" aria-label="Next">›</button>
+    <span class="lb-counter" id="lb-counter"></span>
+    <div class="lb-inner">
+      <img id="lightbox-img" src="" alt="">
+      <p id="lightbox-caption"></p>
+    </div>
+  </div>
+
+  <footer><span>Shamak G. &nbsp;·&nbsp; shamakg@berkeley.edu</span></footer>
+
+  <script src="app.js"></script>
+  <script>
+  (function () {
+    const params  = new URLSearchParams(window.location.search);
+    const id      = params.get('project');
+    const project = PROJECTS.find(p => p.id === id);
+
+    if (!project) {
+      document.getElementById('proj-title').textContent = 'Project not found';
+      return;
+    }
+
+    document.body.classList.add('theme-' + id);
+    document.title = project.title + ' — Shamak G.';
+
+    /* ── Lightbox registry ─────────────────────────────────────── */
+    const gallery = [];
+    function reg(src, caption) { gallery.push({ src, caption: caption || '' }); return gallery.length - 1; }
+    function makeClickable(el, idx) {
+      el.style.cursor = 'pointer';
+      el.addEventListener('click', () => openLightbox(idx));
+    }
+
+    /* ── Header ─────────────────────────────────────────────────── */
+    document.getElementById('proj-eyebrow').textContent = 'Project';
+    document.getElementById('proj-title').textContent = project.title;
+
+    if (project.subtitle) {
+      const s = document.getElementById('proj-subtitle');
+      s.textContent = '— ' + project.subtitle;
+      s.style.display = '';
+    }
+
+    document.getElementById('proj-tech-tags').innerHTML =
+      project.tech.map(t => `<span class="proj-tag">${t}</span>`).join('');
+
+    const linksEl = document.getElementById('proj-links');
+    if (project.github) {
+      const a = document.createElement('a');
+      a.href = project.github; a.target = '_blank'; a.rel = 'noopener noreferrer';
+      a.textContent = 'GitHub ↗'; a.className = 'proj-btn proj-btn--primary';
+      linksEl.appendChild(a);
+    }
+    if (project.demo) {
+      const a = document.createElement('a');
+      a.href = project.demo; a.target = '_blank'; a.rel = 'noopener noreferrer';
+      a.textContent = 'Live Demo ↗'; a.className = 'proj-btn proj-btn--ghost';
+      linksEl.appendChild(a);
+    }
+
+    /* Hero photo */
+    const heroSrc = project.heroImage || (project.images && project.images[0]);
+    if (heroSrc) {
+      const wrap = document.getElementById('proj-hero-photo');
+      const img  = document.getElementById('proj-hero-img');
+      img.src = heroSrc; img.alt = project.title;
+      wrap.style.display = '';
+      const idx = reg(heroSrc, project.title);
+      wrap.addEventListener('click', () => openLightbox(idx));
+    }
+
+    /* ── About ───────────────────────────────────────────────────── */
+    const longDesc = (project.longDesc || '').trim();
+    if (!longDesc) {
+      document.getElementById('proj-about').style.display = 'none';
+      document.querySelector('.section-divider').style.display = 'none';
+    } else {
+      document.getElementById('proj-long-desc').innerHTML = processBody(longDesc);
+    }
+
+    if (project.aboutImage) {
+      const wrap = document.createElement('div');
+      wrap.className = 'about-side-img';
+      const img = document.createElement('img');
+      img.src = project.aboutImage; img.alt = 'Project photo'; img.loading = 'lazy';
+      wrap.appendChild(img);
+      const idx = reg(project.aboutImage, 'Testing at pool');
+      wrap.addEventListener('click', () => openLightbox(idx));
+      document.getElementById('about-body').appendChild(wrap);
+    } else {
+      document.getElementById('about-body').style.display = 'block';
+    }
+
+    /* ── Technical sections ─────────────────────────────────────── */
+    if (project.sections && project.sections.length) {
+      const techWrap = document.getElementById('proj-tech');
+      const techList = document.getElementById('tech-list');
+      techWrap.style.display = '';
+
+      project.sections.forEach(sec => {
+        const block = document.createElement('div');
+        block.className = 'tech-section';
+
+        const tag = document.createElement('span');
+        tag.className = 'section-tag';
+        tag.textContent = sec.title;
+        block.appendChild(tag);
+
+        const inner = document.createElement('div');
+        inner.className = 'tech-section-inner';
+
+        /* Left: images */
+        const imgsCol = document.createElement('div');
+        imgsCol.className = 'tech-imgs';
+        (sec.images || []).forEach(src => {
+          const img = document.createElement('img');
+          img.src = src; img.alt = sec.title; img.className = 'tech-img'; img.loading = 'lazy';
+          const idx = reg(src, sec.title);
+          img.addEventListener('click', () => openLightbox(idx));
+          imgsCol.appendChild(img);
+        });
+
+        /* Right: text + optional side image */
+        const textCol = document.createElement('div');
+        textCol.className = 'tech-text-col';
+
+        const body = document.createElement('div');
+        body.className = 'tech-body';
+        body.innerHTML = processBody(sec.body);
+        textCol.appendChild(body);
+
+        inner.appendChild(imgsCol);
+        inner.appendChild(textCol);
+
+        /* Optional side image — its own column to the right of the text */
+        if (sec.sideImage) {
+          inner.classList.add('has-side');
+          const sWrap = document.createElement('div');
+          const isRound = sec.sideImageRound === true;
+          sWrap.className = 'tech-side-img ' + (isRound ? 'round' : 'rect');
+          const sImg = document.createElement('img');
+          sImg.src = sec.sideImage; sImg.alt = sec.title + ' detail'; sImg.loading = 'lazy';
+          sWrap.appendChild(sImg);
+          const idx = reg(sec.sideImage, sec.title);
+          sWrap.addEventListener('click', () => openLightbox(idx));
+          inner.appendChild(sWrap);
+        }
+
+        block.appendChild(inner);
+        techList.appendChild(block);
+      });
+    }
+
+    /* ── Local videos ───────────────────────────────────────────── */
+    if (project.localVideos && project.localVideos.length) {
+      const wrap = document.getElementById('proj-local-videos');
+      const grid = document.getElementById('local-videos-grid');
+      wrap.style.display = '';
+      const vids = [];
+      project.localVideos.forEach(src => {
+        const cell = document.createElement('div');
+        cell.className = 'local-video-wrap';
+        const vid = document.createElement('video');
+        vid.src = src; vid.loop = true;
+        vid.muted = true; vid.playsInline = true; vid.preload = 'auto';
+        vids.push(vid);
+        cell.appendChild(vid);
+        grid.appendChild(cell);
+      });
+      /* Sync all videos: wait until all can play, then start together */
+      let ready = 0;
+      vids.forEach(v => {
+        v.addEventListener('canplay', () => {
+          ready++;
+          if (ready === vids.length) {
+            vids.forEach(v2 => { v2.currentTime = 0; v2.playbackRate = 0.2; v2.play(); });
+          }
+        }, { once: true });
+      });
+    }
+
+    /* ── PDF embed ──────────────────────────────────────────────── */
+    if (project.pdfEmbed) {
+      const wrap = document.getElementById('proj-pdf');
+      wrap.style.display = '';
+      wrap.innerHTML = `
+        <div class="pdf-frame-wrap">
+          <iframe src="${project.pdfEmbed}" title="${project.title} — PDF"></iframe>
+        </div>
+        <p class="pdf-fallback">Can't see the PDF? <a href="${project.pdfEmbed}" target="_blank" rel="noopener">Open it directly ↗</a></p>`;
+    }
+
+    /* ── Featured ────────────────────────────────────────────────── */
+    if (project.featuredImage) {
+      const wrap = document.getElementById('proj-featured');
+      const img  = document.getElementById('proj-featured-img');
+      img.src = project.featuredImage; img.alt = 'Results';
+      wrap.style.display = '';
+      const idx = reg(project.featuredImage, 'YOLOv8 Implementation — Results');
+      img.addEventListener('click', () => openLightbox(idx));
+    }
+
+    /* ── Result images ───────────────────────────────────────────── */
+    if (project.resultImages && project.resultImages.length) {
+      const wrap = document.getElementById('proj-results');
+      const grid = document.getElementById('results-grid');
+      wrap.style.display = '';
+      project.resultImages.forEach(src => {
+        const img = document.createElement('img');
+        img.src = src; img.alt = 'Result'; img.className = 'result-img'; img.loading = 'lazy';
+        const idx = reg(src);
+        img.addEventListener('click', () => openLightbox(idx));
+        grid.appendChild(img);
+      });
+    }
+
+    /* ── Videos ─────────────────────────────────────────────────── */
+    if (project.videos && project.videos.length) {
+      const wrap = document.getElementById('proj-videos');
+      const list = document.getElementById('video-list');
+      wrap.style.display = '';
+      project.videos.forEach(url => {
+        const d = document.createElement('div'); d.className = 'video-wrap';
+        const f = document.createElement('iframe'); f.src = url; f.loading = 'lazy';
+        f.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
+        f.allowFullscreen = true;
+        d.appendChild(f); list.appendChild(d);
+      });
+    }
+
+    /* ── Body text processor (bold + newlines → HTML) ───────────── */
+    function processBody(text) {
+      // Protect math blocks from HTML escaping by replacing them temporarily
+      const mathBlocks = [];
+      let s = text.replace(/\$\$[\s\S]*?\$\$/g, m => { mathBlocks.push(m); return `\x00M${mathBlocks.length-1}\x00`; });
+      const mathInlines = [];
+      s = s.replace(/\$[^$\n]+?\$/g, m => { mathInlines.push(m); return `\x00I${mathInlines.length-1}\x00`; });
+      // Escape HTML
+      s = s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      // Bold **...**
+      s = s.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+      // Paragraphs on double newline, br on single
+      s = s.replace(/\n\n+/g, '</p><p>').replace(/\n/g, '<br>');
+      // Restore math
+      s = s.replace(/\x00M(\d+)\x00/g, (_, i) => mathBlocks[+i]);
+      s = s.replace(/\x00I(\d+)\x00/g, (_, i) => mathInlines[+i]);
+      return '<p>' + s + '</p>';
+    }
+
+    /* ── KaTeX ──────────────────────────────────────────────────── */
+    function applyKaTeX() {
+      if (typeof renderMathInElement === 'undefined') return;
+      renderMathInElement(document.body, {
+        delimiters: [
+          { left: '$$', right: '$$', display: true  },
+          { left: '$',  right: '$',  display: false },
+        ],
+        throwOnError: false,
+      });
+    }
+    window._katexCallback = applyKaTeX;
+    if (window._katexReady) applyKaTeX();
+
+    /* ── Lightbox ────────────────────────────────────────────────── */
+    let cur = 0;
+
+    function openLightbox(idx) {
+      cur = idx; show();
+      document.getElementById('lightbox').classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
+    function closeLightbox() {
+      document.getElementById('lightbox').classList.remove('open');
+      document.body.style.overflow = '';
+    }
+    function show() {
+      const { src, caption } = gallery[cur] || {};
+      if (!src) return;
+      document.getElementById('lightbox-img').src = src;
+      document.getElementById('lightbox-img').alt = caption;
+      document.getElementById('lightbox-caption').textContent = caption;
+      const multi = gallery.length > 1;
+      document.getElementById('lightbox-prev').style.display = multi ? '' : 'none';
+      document.getElementById('lightbox-next').style.display = multi ? '' : 'none';
+      document.getElementById('lb-counter').textContent = multi ? (cur+1)+' / '+gallery.length : '';
+    }
+
+    document.getElementById('lightbox-close').onclick = closeLightbox;
+    document.getElementById('lightbox-prev').onclick  = () => { cur = (cur - 1 + gallery.length) % gallery.length; show(); };
+    document.getElementById('lightbox-next').onclick  = () => { cur = (cur + 1) % gallery.length; show(); };
+    document.getElementById('lightbox').addEventListener('click', e => { if (e.target === e.currentTarget) closeLightbox(); });
+    document.addEventListener('keydown', e => {
+      if (!document.getElementById('lightbox').classList.contains('open')) return;
+      if (e.key === 'Escape')     closeLightbox();
+      if (e.key === 'ArrowLeft')  { cur = (cur - 1 + gallery.length) % gallery.length; show(); }
+      if (e.key === 'ArrowRight') { cur = (cur + 1) % gallery.length; show(); }
+    });
+
+  })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,19 @@
+# macOS
+.DS_Store
+**/.DS_Store
+
+# Design source / working files (not used by the site)
+port.ai
+port.png
+gaussian_project.tex
+CLAUDE.md
+JEI-24-057*
+image.png
+image\ copy*.png
+image\ copy.png
+Screenshot*.png
+
+# Original video files in root (already copied to projects/gaussian/)
+output_high_quality.mp4
+output_high_quality (3).mp4
+output_high_quality (4).mp4

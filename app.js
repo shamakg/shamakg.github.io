@@ -58,7 +58,7 @@ Results showed robust tracking across varying lighting and water clarity.`,
     aboutImage: 'projects/auv/auv-12.png',
     featuredImage: 'projects/auv/auv-11.png',
     resultImages: [],
-    images: ['projects/auv/auv-thumbnail.png'],
+    images: ['projects/auv/auv-thumbnail.jpg'],
     videos: []
   },
   {

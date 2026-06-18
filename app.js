@@ -138,58 +138,54 @@ Where $G_n = \\text{sigmoid}(o_n) \\cdot \\exp(-\\sigma_n)$, which acts as our a
     videos: []
   },
   {
-    id: 'drone-nav',
-    title: 'Autonomous Drone Navigation',
-    desc: 'RRT*-based path planning for obstacle-avoidance in GPS-denied environments, with custom PID controller for stable real-time flight.',
-    longDesc: `This project implements a full autonomous navigation stack for a quadrotor UAV. The path planning layer uses RRT* to find kinodynamically feasible trajectories in 3D obstacle fields. A custom PID controller with feedforward compensation runs at 400 Hz for robust attitude control. Tested in both simulation (Gazebo) and real-world indoor environments.`,
-    tech: ['Python', 'ROS', 'C++', 'OpenCV'],
-    github: 'https://github.com/',
-    demo: null,
-    images: [],
-    videos: []
-  },
-  {
-    id: 'nn-accelerator',
-    title: 'Neural Net Accelerator',
-    desc: 'Custom ASIC design accelerating matrix operations for NN inference — 10× speedup over CPU baseline at 4× lower power.',
-    longDesc: `Designed a systolic-array matrix-multiply accelerator in SystemVerilog targeting 45nm CMOS. The architecture supports configurable tile sizes and double-buffered DMA for continuous data flow. Power and timing analysis performed with Synopsys DC. A PyTorch-based quantization pipeline maps models to the accelerator with <1% accuracy loss.`,
-    tech: ['SystemVerilog', 'PyTorch', 'Python'],
-    github: 'https://github.com/',
-    demo: null,
-    images: [],
-    videos: []
-  },
-  {
-    id: 'sentiment-pipeline',
-    title: 'ML Sentiment Pipeline',
-    desc: 'Real-time sentiment analysis using fine-tuned transformers, deployed as a scalable microservice with sub-100ms P99 latency.',
-    longDesc: `Fine-tuned a DistilBERT model on a combined financial + social-media dataset. The model is served via a FastAPI microservice containerized with Docker and deployed on AWS ECS with auto-scaling. A Redis cache cuts repeat-query latency by 80%. Achieves 93.4% accuracy on the SST-2 benchmark.`,
-    tech: ['Python', 'PyTorch', 'Docker', 'FastAPI'],
-    github: 'https://github.com/',
-    demo: 'https://github.com/',
-    images: [],
-    videos: []
-  },
-  {
-    id: 'distributed-kv',
-    title: 'Distributed KV Store',
-    desc: 'Fault-tolerant distributed database implementing Raft consensus with linearizable reads/writes and automatic leader election.',
-    longDesc: `Implemented the Raft consensus algorithm from scratch in Go, including log replication, leader election, and log compaction via snapshots. The key-value layer supports linearizable reads (lease-based), write batching, and client retry logic. Tested under network partitions and node failures using a deterministic simulation harness.`,
-    tech: ['Go', 'gRPC', 'Raft'],
-    github: 'https://github.com/',
-    demo: null,
-    images: [],
-    videos: []
-  },
-  {
-    id: 'vision-pipeline',
-    title: 'Vision Pipeline',
-    desc: 'Real-time object detection and multi-target tracking for autonomous vehicle perception — 30 fps on embedded edge hardware.',
-    longDesc: `Deployed a YOLO-based detection model optimized with TensorRT on NVIDIA Jetson Orin. Integrated DeepSORT for multi-target tracking across occlusions. The pipeline processes 1080p frames at 32 fps, well within the real-time budget. Includes a CUDA-accelerated preprocessing stage and a calibrated stereo-depth module for 3D bounding box estimation.`,
-    tech: ['Python', 'CUDA', 'TensorRT', 'C++'],
-    github: 'https://github.com/',
-    demo: 'https://github.com/',
-    images: [],
+    id: 'fire-mapping',
+    title: 'Fire Proneness Mapping',
+    subtitle: 'Wildfire Risk Prediction for California',
+    desc: 'LSTM wildfire risk predictor for California: 88% accuracy at 1-square-mile resolution, trained on 10+ years of Landsat satellite data and deployed as an interactive web app.',
+    longDesc: `Wildfires in California have been getting worse every year, and most existing prediction tools are stuck at county-level granularity. I wanted to build something that worked at a resolution actually useful for emergency planning: one square mile, fine enough to matter.
+
+The interesting challenge here wasn't the model, it was the data. Thousands of GIS satellite files with mismatched coordinate systems, cloud cover removing 20% of usable images, and a severe class imbalance (fires are rare, which is good, but makes training hard) that kept early models stuck at 40-60% accuracy. Getting to 88% took a lot of data engineering and careful thinking about how to handle that imbalance.
+
+The deployed app lets users click any grid cell in California, scrub through 10+ years of predictions, and inspect the underlying environmental features driving the risk score.`,
+    tech: ['Python', 'PyTorch', 'LSTM', 'Landsat 8/9', 'SMOTE', 'GeoPandas', 'GDAL', 'Folium'],
+    github: 'https://github.com/shamakg/forest-fire-prediction',
+    demo: 'https://shamakg.vercel.app/projects/fire-proneness-mapping',
+    highlights: [
+      { label: 'Accuracy', value: '88%' },
+      { label: 'Resolution', value: '1 sq mile' },
+      { label: 'Data Span', value: '10+ years' },
+      { label: 'Response', value: '<1ms' },
+    ],
+    sections: [
+      {
+        title: 'Data Pipeline',
+        body: `Roughly half the total project time was spent wrangling data, not training models.
+
+The raw inputs were thousands of Landsat satellite GIS files paired with historical weather records. The main headaches: inconsistent coordinate systems across files, cloud cover invalidating 20% of images outright, and storage ballooning fast at full resolution. I built an automated geo-cropping pipeline using file metadata to align everything to a unified 1-square-mile grid, filtered cloudy frames, and converted the final dataset to .parquet, cutting storage by 60%.
+
+Eight predictive features made it into the final dataset: temperature, precipitation, leaf area index, vapor pressure deficit, wind speed, drought index, NDVI from Landsat 8/9 (it outperforms MODIS for California dryland ecosystems), and power line proximity.`,
+        images: ['projects/fire/fire-01.png', 'projects/fire/fire-02.png'],
+      },
+      {
+        title: 'Model',
+        body: `The model is an LSTM that looks at 10-week sequences of weather and vegetation data to predict binary fire occurrence in the following week.
+
+The hard part was class imbalance. Fires happen in maybe 1-2% of grid-week pairs, so a naive model just predicts "no fire" everywhere and hits 98% accuracy while being completely useless. I applied SMOTE to synthetically oversample fire events and added weighted loss terms to penalize missed detections. That combination pushed accuracy from the initial 40-60% range up to 88% on the held-out test set.`,
+        images: ['projects/fire/fire-05.png', 'projects/fire/fire-06.png'],
+      },
+      {
+        title: 'Web App',
+        body: `Real-time LSTM inference on a full California grid takes seconds per query, too slow for a web app. The fix was to precompute all predictions offline and store them in a CSV, so the app does fast lookups at query time. Response times dropped from 2+ seconds to under a millisecond.
+
+The app shows a clickable heatmap of California, temporal controls spanning the full 10+ year dataset, and a sidebar with the raw environmental features for any selected grid cell, so users can see not just the risk score but what's driving it.`,
+        images: ['projects/fire/fire-demo.mp4'],
+        wideMedia: true,
+      },
+    ],
+    aboutImage: null,
+    featuredImage: null,
+    resultImages: [],
+    images: ['projects/fire/wildfire.jpg'],
     videos: []
   }
 ];

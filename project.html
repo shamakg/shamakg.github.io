@@ -254,6 +254,10 @@
     .tech-section-inner.has-side {
       grid-template-columns: 340px 1fr 200px;
     }
+    /* When media should dominate the left column */
+    .tech-section-inner.wide-media {
+      grid-template-columns: 1fr 340px;
+    }
 
     /* Images column */
     .tech-imgs { display: flex; flex-direction: column; gap: 0.9rem; }
@@ -615,7 +619,7 @@
 
     if (project.subtitle) {
       const s = document.getElementById('proj-subtitle');
-      s.textContent = '— ' + project.subtitle;
+      s.textContent = project.subtitle;
       s.style.display = '';
     }
 
@@ -685,17 +689,24 @@
         block.appendChild(tag);
 
         const inner = document.createElement('div');
-        inner.className = 'tech-section-inner';
+        inner.className = 'tech-section-inner' + (sec.wideMedia ? ' wide-media' : '');
 
         /* Left: images */
         const imgsCol = document.createElement('div');
         imgsCol.className = 'tech-imgs';
         (sec.images || []).forEach(src => {
-          const img = document.createElement('img');
-          img.src = src; img.alt = sec.title; img.className = 'tech-img'; img.loading = 'lazy';
-          const idx = reg(src, sec.title);
-          img.addEventListener('click', () => openLightbox(idx));
-          imgsCol.appendChild(img);
+          if (/\.(mp4|webm|mov)$/i.test(src)) {
+            const vid = document.createElement('video');
+            vid.src = src; vid.className = 'tech-img'; vid.controls = true;
+            vid.autoplay = true; vid.loop = true; vid.muted = true; vid.playsInline = true;
+            imgsCol.appendChild(vid);
+          } else {
+            const img = document.createElement('img');
+            img.src = src; img.alt = sec.title; img.className = 'tech-img'; img.loading = 'lazy';
+            const idx = reg(src, sec.title);
+            img.addEventListener('click', () => openLightbox(idx));
+            imgsCol.appendChild(img);
+          }
         });
 
         /* Right: text + optional side image */
@@ -710,7 +721,7 @@
         inner.appendChild(imgsCol);
         inner.appendChild(textCol);
 
-        /* Optional side image — its own column to the right of the text */
+        /* Optional side media — its own column to the right of the text */
         if (sec.sideImage) {
           inner.classList.add('has-side');
           const sWrap = document.createElement('div');
@@ -721,6 +732,16 @@
           sWrap.appendChild(sImg);
           const idx = reg(sec.sideImage, sec.title);
           sWrap.addEventListener('click', () => openLightbox(idx));
+          inner.appendChild(sWrap);
+        } else if (sec.sideVideo) {
+          inner.classList.add('has-side');
+          const sWrap = document.createElement('div');
+          sWrap.className = 'tech-side-img rect';
+          const sVid = document.createElement('video');
+          sVid.src = sec.sideVideo; sVid.autoplay = true; sVid.loop = true;
+          sVid.muted = true; sVid.playsInline = true; sVid.controls = true;
+          sVid.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:inherit;';
+          sWrap.appendChild(sVid);
           inner.appendChild(sWrap);
         }
 

@@ -149,7 +149,7 @@ The interesting challenge here wasn't the model, it was the data. Thousands of G
 The deployed app lets users click any grid cell in California, scrub through 10+ years of predictions, and inspect the underlying environmental features driving the risk score.`,
     tech: ['Python', 'PyTorch', 'LSTM', 'Landsat 8/9', 'SMOTE', 'GeoPandas', 'GDAL', 'Folium'],
     github: 'https://github.com/shamakg/forest-fire-prediction',
-    demo: 'https://shamakg.vercel.app/projects/fire-proneness-mapping',
+    demo: null,
     highlights: [
       { label: 'Accuracy', value: '88%' },
       { label: 'Resolution', value: '1 sq mile' },

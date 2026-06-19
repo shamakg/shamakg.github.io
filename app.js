@@ -13,7 +13,7 @@ const PROJECTS = [
     id: 'auv',
     title: 'Autonomous Underwater Vehicle',
     subtitle: "It's Not That Deep",
-    desc: 'Built at MIT Lincoln Laboratory — a competition AUV with YOLOv8 real-time detection, hierarchical ROS control, and autonomous path planning strategies including orbiting, flanking, and pure pursuit.',
+    desc: 'Built at MIT Lincoln Laboratory. A competition AUV with YOLOv8 real-time detection, ROS control, and autonomous path planning strategies including orbiting, flanking, and pure pursuit.',
     longDesc: `I had the pleasure of completing this project at MIT Lincoln Laboratory. The goal was to build an AUV that could locate, track, and pursue other vehicles in the water. This was one of my first experiences with the ROS middleware, and it was a great opportunity to incorporate very familiar concepts such as vision pipelines and motion planning (PIDs) to an unfamiliar environment: underwater!
 
 Much love to our robot: It's Not That Deep.`,
@@ -65,7 +65,7 @@ Results showed robust tracking across varying lighting and water clarity.`,
     id: 'gaussian-image',
     title: 'GaussianImage',
     subtitle: '2D Gaussian Splatting for Image Compression',
-    desc: 'A from-scratch implementation of the GaussianImage paper — representing images as fields of 2D Gaussians using Cholesky covariance factorization, trained end-to-end.',
+    desc: 'An implementation of the GaussianImage paper from scratch',
     longDesc: `This project was my best recreation of the GaussianImage Paper. 3D Gaussian Splatting has become a very popular phrase in my life — mainly because in my research lab (AUTOLab), I'm working on figuring out ways to use Gaussian Splatting to model and disambiguate/trace thin cables and hoses, possibly eliminating the current need for robot primitives to trace cables.
 
 I wanted to familiarize myself with the math behind Gaussian Splatting, and I came upon a paper that did something very interesting: 2D Gaussian Splatting for compression applications. I'll do my best to explain my process below.
@@ -76,6 +76,7 @@ A decent quality image is $512 \\times 512$ (over $750,000$ data points for RGB)
     demo: null,
     thumbnail: 'projects/gaussian/thumb.jpg',
     cardVideo: 'projects/gaussian/v1.mp4',
+    cardVideoRate: 0.2,
     localVideos: [
       'projects/gaussian/v1.mp4',
       'projects/gaussian/v2.mp4',
@@ -127,7 +128,7 @@ Where $G_n = \\text{sigmoid}(o_n) \\cdot \\exp(-\\sigma_n)$, which acts as our a
   {
     id: 'jei-ml-alloys',
     title: 'ML Predictions of Additively Manufactured Alloy Crack Susceptibilities',
-    desc: 'Published in the Journal of Emerging Investigators — a multi-model ML pipeline predicting solidification cracking in metal alloys for additive manufacturing, achieving top accuracy with Random Forest.',
+    desc: 'A multi-model ML pipeline predicting solidification cracking in metal alloys for additive manufacturing for aerospace applications.',
     longDesc: '',
     tech: ['Python', 'Machine Learning', 'Random Forest', 'Scikit-learn', 'Additive Manufacturing', 'Materials Science'],
     github: null,
@@ -186,6 +187,21 @@ The app shows a clickable heatmap of California, temporal controls spanning the 
     featuredImage: null,
     resultImages: [],
     images: ['projects/fire/wildfire.jpg'],
+    videos: []
+  },
+  {
+    id: 'autonomous-parking',
+    title: 'Coming Soon: Autonomous Parking',
+    subtitle: '',
+    desc: '',
+    longDesc: 'Currently building...',
+    tech: [],
+    github: null,
+    demo: null,
+    comingSoon: true,
+    cardVideo: 'projects/autonomous-parking/scenario_2_chase.mp4',
+    sections: [],
+    images: [],
     videos: []
   }
 ];
@@ -780,22 +796,27 @@ function renderProjects() {
   grid.innerHTML = PROJECTS.map((p, i) => {
     const detailURL = `project.html?project=${p.id}`;
     const thumb     = p.thumbnail || (p.images && p.images[0]) || placeholderThumb(p, i);
-    const linksHTML = [
-      `<a href="${detailURL}" class="card-link card-link--primary">View Project →</a>`,
-      p.github ? `<a href="${p.github}" class="card-link" target="_blank" rel="noopener">GitHub ↗</a>` : '',
-      p.demo   ? `<a href="${p.demo}"   class="card-link" target="_blank" rel="noopener">Live ↗</a>`   : '',
-    ].join('');
+    const linksHTML = p.comingSoon
+      ? `<span class="card-link card-link--soon">Coming Soon</span>`
+      : [
+          `<a href="${detailURL}" class="card-link card-link--primary">View Project →</a>`,
+          p.github ? `<a href="${p.github}" class="card-link" target="_blank" rel="noopener">GitHub ↗</a>` : '',
+          p.demo   ? `<a href="${p.demo}"   class="card-link" target="_blank" rel="noopener">Live ↗</a>`   : '',
+        ].join('');
 
+    const rateAttr = p.cardVideoRate ? ` oncanplay="this.playbackRate=${p.cardVideoRate}"` : '';
     const thumbMedia = p.cardVideo
-      ? `<video src="${p.cardVideo}" autoplay loop muted playsinline oncanplay="this.playbackRate=0.2"></video>`
+      ? `<video src="${p.cardVideo}" autoplay loop muted playsinline${rateAttr}></video>`
       : `<img src="${thumb}" alt="${p.title} preview" loading="lazy">`;
+
+    const thumbWrap = p.comingSoon
+      ? `<div class="card-thumb">${thumbMedia}</div>`
+      : `<a href="${detailURL}" class="card-thumb">${thumbMedia}</a>`;
 
     return `
       <div class="project-card">
         <img src="pinecone1.png" class="pinecone" alt="" aria-hidden="true">
-        <a href="${detailURL}" class="card-thumb">
-          ${thumbMedia}
-        </a>
+        ${thumbWrap}
         <h3 class="project-title">${p.title}</h3>
         <p class="project-desc">${p.desc}</p>
         <div class="card-links">${linksHTML}</div>

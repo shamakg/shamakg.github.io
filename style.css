@@ -533,6 +533,14 @@ body {
   border-color: var(--green-dark);
 }
 
+.card-link--soon {
+  color: var(--text-dark-2);
+  background: transparent;
+  border-style: dashed;
+  cursor: default;
+  font-style: italic;
+}
+
 /* ============================================================
    CONTACT SECTION
    ============================================================ */

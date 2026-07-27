@@ -659,4 +659,14 @@ footer {
 
   .projects-grid { grid-template-columns: 1fr; }
   .projects-container { padding: 0 1.5rem; }
+
+  /* On phone-height viewports the absolutely-positioned scroll hint
+     can sit close enough to the bottom of #landing to overlap the
+     social icons above it — it's a nice-to-have desktop affordance,
+     so just drop it here rather than chase every content-length case. */
+  .scroll-hint { display: none; }
+}
+
+@media (max-height: 700px) {
+  .scroll-hint { display: none; }
 }

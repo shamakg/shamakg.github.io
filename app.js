@@ -840,6 +840,30 @@ function renderProjects() {
         <div class="card-links">${linksHTML}</div>
       </div>`;
   }).join('');
+
+  initCardVideoPlayback(grid);
+}
+
+/* Mobile browsers (iOS Safari in particular) won't reliably autoplay
+   <video> elements that were inserted via innerHTML, even with the
+   autoplay/muted/playsinline attributes set — it silently no-ops.
+   Explicitly calling .play() after insertion fixes it everywhere.
+   An IntersectionObserver also pauses off-screen thumbs (saves battery/
+   data on mobile) and resumes them when scrolled back into view, since
+   mobile browsers frequently pause background video on their own. */
+function initCardVideoPlayback(grid) {
+  const videos = grid.querySelectorAll('video');
+  videos.forEach(v => { v.play().catch(() => {}); });
+
+  if (!('IntersectionObserver' in window)) return;
+  const io = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      const v = entry.target;
+      if (entry.isIntersecting) v.play().catch(() => {});
+      else v.pause();
+    });
+  }, { threshold: 0.1 });
+  videos.forEach(v => io.observe(v));
 }
 
 /* ============================================================

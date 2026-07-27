@@ -126,6 +126,21 @@ Where $G_n = \\text{sigmoid}(o_n) \\cdot \\exp(-\\sigma_n)$, which acts as our a
     videos: [],
   },
   {
+    id: 'trace-cables',
+    title: 'TRACE',
+    subtitle: 'Interactive Bi-Directional Cable Tracing Amid Clutter',
+    desc: 'TRACE combines bi-directional cable tracing with interactive perception primitives (Divergence Push and Cluster Dilation) to trace monochrome cables amid clutter.',
+    longDesc: '',
+    tech: [],
+    github: null,
+    demo: null,
+    externalURL: 'https://trace-paper.github.io/',
+    cardVideo: 'projects/trace-cables/trace_loop.mp4',
+    sections: [],
+    images: [],
+    videos: []
+  },
+  {
     id: 'jei-ml-alloys',
     title: 'ML Predictions of Additively Manufactured Alloy Crack Susceptibilities',
     desc: 'A multi-model ML pipeline predicting solidification cracking in metal alloys for additive manufacturing for aerospace applications.',
@@ -794,10 +809,13 @@ function renderProjects() {
   if (!grid) return;
 
   grid.innerHTML = PROJECTS.map((p, i) => {
-    const detailURL = `project.html?project=${p.id}`;
+    const detailURL = p.externalURL || `project.html?project=${p.id}`;
+    const externalAttrs = p.externalURL ? ` target="_blank" rel="noopener"` : '';
     const thumb     = p.thumbnail || (p.images && p.images[0]) || placeholderThumb(p, i);
     const linksHTML = p.comingSoon
       ? `<span class="card-link card-link--soon">Coming Soon</span>`
+      : p.externalURL
+      ? `<a href="${detailURL}" class="card-link card-link--primary" target="_blank" rel="noopener">View Project ↗</a>`
       : [
           `<a href="${detailURL}" class="card-link card-link--primary">View Project →</a>`,
           p.github ? `<a href="${p.github}" class="card-link" target="_blank" rel="noopener">GitHub ↗</a>` : '',
@@ -811,7 +829,7 @@ function renderProjects() {
 
     const thumbWrap = p.comingSoon
       ? `<div class="card-thumb">${thumbMedia}</div>`
-      : `<a href="${detailURL}" class="card-thumb">${thumbMedia}</a>`;
+      : `<a href="${detailURL}" class="card-thumb"${externalAttrs}>${thumbMedia}</a>`;
 
     return `
       <div class="project-card">

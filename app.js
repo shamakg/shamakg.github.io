@@ -773,37 +773,6 @@ function drawSquirrel(ctx, canvas) {
    E. PROJECT CARD RENDERING
    ============================================================ */
 
-/* Generates an on-brand SVG placeholder thumbnail (data URI).
-   Used when a project has no real images yet. */
-function placeholderThumb(p, i) {
-  const grads = [
-    ['#1e6b3a', '#74cc6c'], ['#14532d', '#4aa84a'], ['#155e63', '#3fc0b0'],
-    ['#3a2d5c', '#8a6cc8'], ['#5c3a1e', '#caa05a'], ['#1e3a5c', '#5a9bd4'],
-  ];
-  const [a, b] = grads[i % grads.length];
-
-  /* scattered pixel squares (deterministic) for a subtle pixel-art motif */
-  let rects = '';
-  for (let k = 0; k < 30; k++) {
-    const x = ((Math.sin(k * 12.9 + i * 3.1) * 0.5 + 0.5) * 400) | 0;
-    const y = ((Math.cos(k * 7.7 + i * 2.3) * 0.5 + 0.5) * 225) | 0;
-    const s = 5 + ((k * 7) % 4) * 4;
-    const o = (0.05 + (k % 5) * 0.03).toFixed(2);
-    rects += `<rect x='${x}' y='${y}' width='${s}' height='${s}' fill='#fff' opacity='${o}'/>`;
-  }
-
-  const title = p.title.replace(/&/g, '&amp;');
-  const svg =
-    `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 225'>` +
-    `<defs><linearGradient id='g${i}' x1='0' y1='0' x2='1' y2='1'>` +
-    `<stop offset='0' stop-color='${a}'/><stop offset='1' stop-color='${b}'/></linearGradient></defs>` +
-    `<rect width='400' height='225' fill='url(#g${i})'/>${rects}` +
-    `<text x='22' y='44' font-family='monospace' font-size='13' fill='#fff' opacity='0.6'>PREVIEW</text>` +
-    `<text x='22' y='200' font-family='Space Grotesk, Arial, sans-serif' font-size='21' font-weight='700' fill='#fff'>${title}</text>` +
-    `</svg>`;
-  return 'data:image/svg+xml,' + encodeURIComponent(svg);
-}
-
 function renderProjects() {
   const grid = document.getElementById('projects-grid');
   if (!grid) return;
@@ -811,7 +780,7 @@ function renderProjects() {
   grid.innerHTML = PROJECTS.map((p, i) => {
     const detailURL = p.externalURL || `project.html?project=${p.id}`;
     const externalAttrs = p.externalURL ? ` target="_blank" rel="noopener"` : '';
-    const thumb     = p.thumbnail || (p.images && p.images[0]) || placeholderThumb(p, i);
+    const thumb     = p.thumbnail || (p.images && p.images[0]);
     const linksHTML = p.comingSoon
       ? `<span class="card-link card-link--soon">Coming Soon</span>`
       : p.externalURL

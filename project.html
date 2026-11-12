@@ -143,6 +143,10 @@
     body.theme-auv .proj-hero-photo { border-color: rgba(63,192,176,0.2); }
     .proj-hero-photo:hover { border-color: rgba(184,224,74,0.5); box-shadow: 12px 12px 0 var(--mat), 0 8px 30px rgba(0,0,0,0.5); }
     .proj-hero-photo img { width: 100%; display: block; aspect-ratio: 4/3; object-fit: cover; }
+    .proj-hero-photo.wide { max-width: 100%; }
+    .proj-hero-photo.video { cursor: default; }
+    .proj-hero-photo video { width: 100%; display: block; background: #000; }
+    .proj-hero-photo.wide img { aspect-ratio: auto; }
     .proj-hero-photo .zoom-hint {
       position: absolute; bottom: 0.5rem; right: 0.6rem;
       font-size: 0.65rem;
@@ -258,6 +262,11 @@
     /* When media should dominate the left column */
     .tech-section-inner.wide-media {
       grid-template-columns: 1fr 340px;
+    }
+    /* Media full width on top, text underneath */
+    .tech-section-inner.stacked {
+      grid-template-columns: 1fr;
+      gap: 1.8rem;
     }
 
     /* Images column */
@@ -497,6 +506,7 @@
     /* ── RESPONSIVE ──────────────────────────────────────────────── */
     @media (max-width: 860px) {
       .proj-hero-photo img { aspect-ratio: 16/9; }
+      .proj-hero-photo.wide img { aspect-ratio: auto; }
       .about-body { grid-template-columns: 1fr; }
       .about-side-img { order: -1; }
       .about-side-img img { aspect-ratio: 16/9; }
@@ -642,14 +652,30 @@
       linksEl.appendChild(a);
     }
 
+    /* Hero video (autoplaying loop, poster shown while it loads) */
+    if (project.heroVideo) {
+      const wrap = document.getElementById('proj-hero-photo');
+      const vid  = document.createElement('video');
+      vid.src = project.heroVideo;
+      if (project.heroPoster) vid.poster = project.heroPoster;
+      vid.autoplay = true; vid.loop = true; vid.muted = true; vid.playsInline = true;
+      vid.setAttribute('aria-label', project.title);
+      wrap.replaceChildren(vid);
+      wrap.classList.add('video');
+      if (project.heroWide) wrap.classList.add('wide');
+      wrap.style.display = '';
+      vid.play().catch(() => {});
+    }
+
     /* Hero photo */
     const heroSrc = project.heroImage || (project.images && project.images[0]);
-    if (heroSrc) {
+    if (heroSrc && !project.heroVideo) {
       const wrap = document.getElementById('proj-hero-photo');
       const img  = document.getElementById('proj-hero-img');
       img.src = heroSrc; img.alt = project.title;
+      if (project.heroWide) wrap.classList.add('wide');
       wrap.style.display = '';
-      const idx = reg(heroSrc, project.title);
+      const idx = reg(heroSrc, project.heroCaption || project.title);
       wrap.addEventListener('click', () => openLightbox(idx));
     }
 
@@ -691,7 +717,7 @@
         block.appendChild(tag);
 
         const inner = document.createElement('div');
-        inner.className = 'tech-section-inner' + (sec.wideMedia ? ' wide-media' : '');
+        inner.className = 'tech-section-inner' + (sec.stacked ? ' stacked' : sec.wideMedia ? ' wide-media' : '');
 
         /* Left: images */
         const imgsCol = document.createElement('div');
@@ -799,7 +825,7 @@
       const img  = document.getElementById('proj-featured-img');
       img.src = project.featuredImage; img.alt = 'Results';
       wrap.style.display = '';
-      const idx = reg(project.featuredImage, 'YOLOv8 Implementation — Results');
+      const idx = reg(project.featuredImage, project.featuredCaption || 'YOLOv8 Implementation — Results');
       img.addEventListener('click', () => openLightbox(idx));
     }
 

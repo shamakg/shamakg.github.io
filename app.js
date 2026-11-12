@@ -105,11 +105,13 @@ The left side of the comparison video is the teacher, the right side is the stud
       },
       {
         title: 'Lessons',
-        body: `**Friction can lie.** The tape asset shipped with a friction of 10, so every grasp "worked". Realistic friction exposed slipping during the 90° reorientation, and I had to re-derive the grasp and stiffen the gripper.
+        body: `A few things caught me off guard along the way.
 
-**VLMs mirror left and right.** The camera faces the robots, so any prompt that named a side got the wrong arm. Wrist images (like this one) also produced false "holding" verdicts, since an open gripper framing a tape on the table looks a lot like a grasp. Arm-agnostic prompts on the scene camera only fixed both.
+The tape model in the sim came with a friction value of 10, which is far higher than anything real. Every grasp I tried worked, which honestly should have been a red flag. Once I set the friction to something realistic, the tape started slipping when the gripper rotated it 90° to present it, so I had to redo the grasp and make the gripper squeeze harder.
 
-**LLM graph authoring is a contract problem.** The coordinator wires skills by name, so mismatched input/output names produced broken graphs. Aligning the frontmatter schema and adding a lint got the generated graph to 10 subgraphs with 0 validation errors.`,
+I used a vision-language model to check whether each grasp succeeded, and it kept judging the wrong arm. The camera faces the robots, so its left is the robot's right. It also said the gripper was holding the tape when it wasn't, because from the wrist camera (the image here) an open gripper hovering over the tape looks a lot like a grasp. I ended up writing prompts that never mention left or right, and only showing it the main scene camera.
+
+Getting the LLM to build a working graph was mostly about naming. It connects skills purely by their input and output names, so if one skill called its output one thing and the next skill expected a slightly different name, the graph broke. Once I made the names consistent across the library and added a check for mismatches, the generated graph came out clean.`,
         images: ['projects/tape-handover/wristview.png'],
       },
     ],

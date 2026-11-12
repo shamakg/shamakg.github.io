@@ -922,8 +922,27 @@ function renderProjects() {
       </div>`;
   }).join('');
 
+  equalizeCardHeights();
   initCardVideoPlayback(grid);
 }
+
+/* Desktop only: make every project card as tall as the tallest one, so
+   the grid reads as uniform tiles without truncating any text. Cards are
+   flex columns, so the link row stays pinned to the bottom. */
+const EQUAL_CARDS_MQ = window.matchMedia('(min-width: 1101px)');
+function equalizeCardHeights() {
+  const cards = document.querySelectorAll('.project-card');
+  cards.forEach(c => { c.style.height = ''; });
+  if (!EQUAL_CARDS_MQ.matches || !cards.length) return;
+  const tallest = Math.max(...[...cards].map(c => c.offsetHeight));
+  cards.forEach(c => { c.style.height = tallest + 'px'; });
+}
+let equalizeTimer;
+window.addEventListener('resize', () => {
+  clearTimeout(equalizeTimer);
+  equalizeTimer = setTimeout(equalizeCardHeights, 120);
+});
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(equalizeCardHeights);
 
 /* Mobile browsers (iOS Safari in particular) won't reliably autoplay
    <video> elements that were inserted via innerHTML, even with the

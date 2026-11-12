@@ -330,6 +330,7 @@ body {
    ============================================================ */
 #projects {
   position: relative;
+  scroll-margin-top: 62px; /* land just below the fixed navbar */
   background: var(--projects-bg);
   min-height: 100vh;
   padding: 3.5rem 0 6rem; /* bottom room for canvas petal pile */
@@ -623,6 +624,42 @@ footer {
   65%  { transform: translateY(-5px) rotate(-1.5deg); }
   82%  { transform: translateY(-5px) rotate(0.8deg); }
   100% { transform: translateY(-5px) rotate(0deg); }
+}
+
+/* ---- Desktop: fit every project card in one view ----
+   4 compact columns, last row centred. equalizeCardHeights() in
+   app.js gives every card the height of the tallest one. */
+@media (min-width: 1101px) {
+  #projects { padding-top: 1rem; }
+  .projects-container { max-width: 1460px; }
+  .section-heading { margin-bottom: 0.9rem; }
+
+  .projects-grid {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.9rem 1.3rem;
+  }
+  .project-card {
+    flex: 0 0 calc((100% - 3 * 1.3rem) / 4);
+    display: flex;
+    flex-direction: column;
+    padding: 1rem 1rem 0.9rem;
+  }
+  /* Thumbnail height follows the viewport height so both rows of cards
+     fit on shorter laptop screens without cutting any text. */
+  .card-thumb { aspect-ratio: auto; height: clamp(64px, calc(50vh - 300px), 165px); margin-bottom: 0.6rem; }
+  .project-title {
+    font-size: 0.98rem;
+    margin-bottom: 0.3rem;
+  }
+  .project-desc {
+    font-size: 0.78rem;
+    line-height: 1.5;
+    margin-bottom: 0.6rem;
+  }
+  .card-links { margin-top: auto; }
+  .card-link { padding: 0.32rem 0.75rem; font-size: 0.72rem; }
 }
 
 /* ============================================================

@@ -109,9 +109,7 @@ The left side of the comparison video is the teacher, the right side is the stud
 
 **VLMs mirror left and right.** The camera faces the robots, so any prompt that named a side got the wrong arm. Wrist images (like this one) also produced false "holding" verdicts, since an open gripper framing a tape on the table looks a lot like a grasp. Arm-agnostic prompts on the scene camera only fixed both.
 
-**LLM graph authoring is a contract problem.** The coordinator wires skills by name, so mismatched input/output names produced broken graphs. Aligning the frontmatter schema and adding a lint got the generated graph to 10 subgraphs with 0 validation errors.
-
-**Read the logs before blaming the robot.** One sweep came back 9 / 126. It was a renamed import, not robotics. I fixed it and reran the remaining 117: 117 / 117.`,
+**LLM graph authoring is a contract problem.** The coordinator wires skills by name, so mismatched input/output names produced broken graphs. Aligning the frontmatter schema and adding a lint got the generated graph to 10 subgraphs with 0 validation errors.`,
         images: ['projects/tape-handover/wristview.png'],
       },
     ],

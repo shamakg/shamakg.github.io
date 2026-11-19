@@ -14,15 +14,11 @@ const PROJECTS = [
     title: 'Bimanual Tape Handover',
     subtitle: 'From an LLM-Authored Skill Graph to a Visuomotor Policy',
     desc: 'How do we perform a bimanual handover of a round object using agentic robotics?',
-    longDesc: `**This was one of the first implementations of the Graph-as-Policy (GaP) paper on the YAM bimanual embodiment.** GaP has an LLM compose a task out of modular, reusable skills, and I wanted to see if that could handle one of the most contact-heavy things two arms can do together: passing an object between them.
+    longDesc: `**One of the first implementations of the Graph-as-Policy (GaP) paper on the YAM bimanual robot.** The left arm picks up a roll of tape from a random spot, hands it to the right arm mid-air, and the right arm sets it on a roll of duct tape. Every pose comes from RGB-D perception, with no ground truth.
 
-The task sounds simple: the left arm of a two-arm YAM robot picks up a roll of yellow tape, hands it to the right arm in mid-air, and the right arm sets it flat on top of a roll of duct tape. Both rolls start at random spots on the table, and nothing comes from ground truth. Every pose is perceived from RGB-D cameras.
+I built it in two stages. First, an LLM composes my skill library into a graph that solves the task (**99.6% success, 0 arm collisions**). Then I distilled that graph's rollouts into an ACT policy that runs **~10× faster** and went **25 / 25 on held-out positions**.
 
-A tape spool turns out to be a really annoying object to hand over. It's a ring, so closing the gripper at the centre grabs nothing. The giver has to present it so the receiver can get a finger through the hole, and since both arms are now crowding the same tiny volume, arm-arm collisions are the default. On top of that, the tape shifts in the receiver's grip after the swap.
-
-My approach had two stages. First, a **teacher**: an LLM assembles the task into a graph of modular skills I wrote (perceive, grasp, present, hand over, place, verify), which runs in MuJoCo with cuRobo motion planning. Second, a **student**: I logged the teacher's rollouts as a dataset and trained an ACT visuomotor policy on them. The teacher generalizes because every pose is computed from geometry. The student is about 10× faster, but it only generalizes as far as its data does.
-
-(The Graph-as-Policy engine, the base skill library, and the LIBERO-YAM sim are shared lab infrastructure. Bringing GaP to the YAM embodiment and this task was my part. The tape-handover skills, perception and grasp geometry, benchmarking, data pipeline, and ACT training are mine.)`,
+(GaP, the base skill library, and the sim are shared lab infrastructure. The tape-handover skills, perception, benchmarking, data pipeline, and ACT training are mine.)`,
     tech: ['Graph-as-Policy', 'Python', 'MuJoCo', 'cuRobo', 'Grounding-DINO', 'SAM', 'LeRobot / ACT', 'PyTorch', 'W&B'],
     github: null,
     demo: null,
@@ -39,62 +35,46 @@ My approach had two stages. First, a **teacher**: an LLM assembles the task into
     sections: [
       {
         title: 'Skill Graph',
-        body: `Instead of writing one big script, I wrote a library of small skills, each with a SKILL.md describing its inputs and outputs. An LLM coordinator (gap generate) reads only that frontmatter and wires the skills into a graph: perceive the duct, perceive the tape, compute a ring grasp, then route to either a direct pick-and-place or the full handover, with verify gates and retry loops along the way.
+        body: `I wrote a library of small skills (perceive, grasp, present, hand over, place, verify), and an LLM wires them into a graph using only their input and output descriptions. The screenshot is the actual generated graph.
 
-The agent figured out on its own that perception should come first, and split it into two subgraphs, one per tape. The screenshot is the actual generated graph, 14 nodes from perceive to done.
-
-Across 5 benchmark sweeps on a 2-D grid of tape and duct positions, the LLM-generated graph succeeded **481 / 483 times (99.6%) with 0 arm-arm collisions**. It also solved 7 of 8 hand-picked positions outside the grid.`,
+Across 5 benchmark sweeps, it succeeded **481 / 483 times (99.6%) with 0 arm-arm collisions**.`,
         images: ['projects/tape-handover/skill-graph.png', 'projects/tape-handover/handover.mp4'],
         wideMedia: true,
       },
       {
         title: 'Motion Planning',
-        body: `Every motion is planned with cuRobo, which models the robot as a cloud of collision spheres (that's the YAM arm, fitted with MorphIt). Coarse spheres are fine for the big links, but the fingers were the hard part. They have to thread through a 47 mm hole, so their collision model needs to be much tighter.
-
-cuRobo only plans. I wrote a custom executor that streams each plan through the sim's PD controller, because the stock one just teleports the joints, which happily phases the fingers right through the tape.`,
+        body: `cuRobo plans every motion, modelling the arm as collision spheres (fitted with MorphIt). The fingers needed the tightest fit, since they have to thread through a 47 mm hole.`,
         images: ['projects/tape-handover/morphit-spheres.jpg'],
       },
       {
         title: 'Perception',
-        body: `Grounding-DINO finds "yellow tape", SAM masks it, and the mask is back-projected through depth. That works, but loading the models alone takes 23.7 s.
-
-So I also built a cheaper CV version: estimate the table height from depth, keep only pixels a set height above it, colour-mask, and take the connected component that forms the top face. It reaches **2.5–3 mm XY error** with no learned models, and perceiving both tapes drops from **~29 s to ~5 s**.
-
-Two bugs taught me the most here. First, under 2% of mask pixels landed on the gripper, and taking the max height locked the grasp onto them, putting it 100–270 mm off. Using the 98th percentile as the top face fixed it. Second, after a camera change the oblique view could see the table through the hole, which shrank the estimated hole radius and sent the grasp straight into the hole. Fitting the radii on the top-face slab only dropped presentation error from 33.6 mm to 4.3 mm.`,
+        body: `Grounding-DINO and SAM find the tape, and depth turns the mask into a 3D pose. I also built a model-free CV version that's just as accurate (**2.5–3 mm**) and cuts perception time from **~29 s to ~5 s**.`,
         images: ['projects/tape-handover/perception-dino-sam.png', 'projects/tape-handover/perception-cv.png'],
       },
       {
         title: 'The Handover',
-        body: `My favourite trick: after the giver grasps the tape, it measures where the tape actually sits in its gripper, and that pose gets composed into cuRobo's tool offset. The tape itself becomes the end-effector, so the planner moves the tape to the meet point instead of the hand. The meet point is derived from the arm-base layout rather than hand-tuned, so the station configures itself if the arms move.
-
-A straight-on receiver approach drove one arm through the other, so the receiver threads a finger through the hole on a diagonal. Then the grips swap and the giver backs out before opening.
-
-For a while tapes kept rolling off the duct. I ruled out perception (~5 mm) and tilt (1.2°) before finding the real cause: the receiver's offset was measured at the over-inserted pose, but the ring slides about 20 mm back into its seat once the giver lets go. Anchoring the offset to the grasp seat cut concentric error from 51 mm to 17.7 mm and tilt from 29.5° to 1.0°.`,
+        body: `The key trick: once the giver grabs the tape, it measures where the tape actually sits in its gripper, so the motion planner (cuRobo) moves the tape itself to the meet point instead of the hand. The receiver then threads a finger through the hole on a diagonal, so the two arms never collide.`,
         images: ['projects/tape-handover/three-cam.mp4'],
         stacked: true,
       },
       {
+        title: 'Grasp Verification',
+        body: `A vision-language model checks each grasp. Wrist views like this one fooled it, since an open gripper over the tape looks a lot like a grasp, so it only gets the main scene camera.`,
+        images: ['projects/tape-handover/wristview.png'],
+      },
+      {
         title: 'Generalization',
-        body: `The video at the top of the page is the same graph on six different tape and duct layouts. Nothing is hard-coded, so each new layout is just another set of perceived poses.
+        body: `Nothing is hard-coded, so the same graph works across every tape and duct layout in the benchmark grid. The first full 72-pair sweep went **72 / 72**.
 
-The benchmark grid pairs every pickup spot (blue) with every place spot (green), and the handover happens at the meet point in the middle. The first full 72-pair sweep went 72 / 72.
-
-The out-of-grid probes also showed that the reach envelope is asymmetric: at x = 0.65 the receiver can still place, but the giver can't pick. x = 0.70 is a true kinematic limit, and the planner agrees.`,
-        images: ['projects/tape-handover/benchmark-grid.jpg'],
+The same skills also stacked bowls with no new code, just a different perception query.`,
+        images: ['projects/tape-handover/benchmark-grid.jpg', 'projects/tape-handover/skill-reuse-bowls.mp4'],
         wideMedia: true,
       },
       {
-        title: 'Skill Reuse',
-        body: `The point of modular skills is that they aren't tied to one task. I pointed the same perceive and pickup subgraphs at a different job: the agent passed "black bowl" as the perception query instead of "yellow tape", and the library stacked bowls with no new code.`,
-        images: ['projects/tape-handover/skill-reuse-bowls.mp4'],
-      },
-      {
         title: 'ACT Policy',
-        body: `I logged 210 successful graph rollouts as a LeRobot dataset: **84.6k frames** at 30 Hz with 3 cameras and 14-D joint actions. 25 episodes, stratified across the position grid, were held out for evaluation. ACT (ResNet-18 backbone, chunk size 100) trained for 100k steps in just under 3 hours on one GPU.
+        body: `I trained an ACT policy on **210 graph rollouts (84.6k frames)**. On held-out positions with **7 distractor objects it never saw in training**, it went **25 / 25** and ran about 10× faster than the graph.
 
-On the held-out positions, with **7 grocery-item distractors** that never appeared in training (soup cans, a bottle, a juice box, a bowl), the policy went **25 / 25**. Each episode takes about 52 s of wall-clock time, compared with 84–518 s for the graph, which runs perception, VLM verification and planning at every step.
-
-The left side of the comparison video is the teacher, the right side is the student at the exact same position.`,
+In the comparison video, the left side is the graph and the right side is the policy at the same position.`,
         images: ['projects/tape-handover/teacher-vs-student.mp4', 'projects/tape-handover/act-grid.mp4'],
         wideMedia: true,
       },
@@ -102,17 +82,6 @@ The left side of the comparison video is the teacher, the right side is the stud
         title: 'Where It Breaks',
         body: `ACT interpolates well and does not extrapolate.`,
         images: ['projects/tape-handover/act-ood-failure.mp4'],
-      },
-      {
-        title: 'Lessons',
-        body: `A few things caught me off guard along the way.
-
-The tape model in the sim came with a friction value of 10, which is far higher than anything real. Every grasp I tried worked, which honestly should have been a red flag. Once I set the friction to something realistic, the tape started slipping when the gripper rotated it 90° to present it, so I had to redo the grasp and make the gripper squeeze harder.
-
-I used a vision-language model to check whether each grasp succeeded, and it kept judging the wrong arm. The camera faces the robots, so its left is the robot's right. It also said the gripper was holding the tape when it wasn't, because from the wrist camera (the image here) an open gripper hovering over the tape looks a lot like a grasp. I ended up writing prompts that never mention left or right, and only showing it the main scene camera.
-
-Getting the LLM to build a working graph was mostly about naming. It connects skills purely by their input and output names, so if one skill called its output one thing and the next skill expected a slightly different name, the graph broke. Once I made the names consistent across the library and added a check for mismatches, the generated graph came out clean.`,
-        images: ['projects/tape-handover/wristview.png'],
       },
     ],
     featuredImage: 'projects/tape-handover/filmstrip.png',

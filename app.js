@@ -464,25 +464,28 @@ function initPetals(canvas) {
 }
 
 /* ============================================================
-   D. SQUIRREL — animated from squirrel_sprite.png (7-frame jump)
-      Frames extracted from the sprite sheet; white chroma-keyed
-      to transparent. Sprite faces RIGHT (flip for left movement).
+   D. SQUIRREL — animated from squirrel.webp (7-frame jump)
+      squirrel.webp is a vector-traced, 3x-resolution redraw of the
+      original sprite with a transparent background, so it stays crisp
+      on Retina screens. Sprite faces RIGHT (flip for left movement).
    ============================================================ */
 
-/* Tight frame bounding boxes within the 612×612 sheet (jump cycle order):
+/* Frame boxes within the 1836×720 sheet (jump cycle order):
    0 crouch · 1 launch · 2 ascend · 3 peak · 4 descend · 5 pre-land · 6 land */
+const SQ_RES = 3;             // sheet pixels per original sprite pixel
 const SQ_FRAMES = [
-  { x: 24,  y: 47,  w: 103, h: 65 },
-  { x: 175, y: 47,  w: 105, h: 64 },
-  { x: 322, y: 49,  w: 114, h: 61 },
-  { x: 472, y: 52,  w: 122, h: 51 },
-  { x: 9,   y: 209, w: 127, h: 41 },
-  { x: 166, y: 205, w: 121, h: 42 },
-  { x: 322, y: 193, w: 116, h: 61 },
+  { x: 66, y: 45, w: 321, h: 207 },
+  { x: 519, y: 45, w: 327, h: 204 },
+  { x: 960, y: 51, w: 354, h: 195 },
+  { x: 1410, y: 60, w: 378, h: 165 },
+  { x: 21, y: 531, w: 393, h: 135 },
+  { x: 492, y: 519, w: 375, h: 138 },
+  { x: 960, y: 483, w: 360, h: 195 },
 ];
 
-const SQ_SCALE = 0.88;        // on-screen CSS px per source px
-let   sqSheet  = null;        // chroma-keyed offscreen canvas
+const SQ_SCALE = 0.88 / SQ_RES;  // on-screen CSS px per sheet px
+const SQ_PAD_PX = 2 * 0.88;      // frame boxes are padded 2 source px; keep feet where they were
+let   sqSheet  = null;        // decoded sprite sheet image
 let   sqSheetReady = false;
 
 /* ---- Animation state ---- */
@@ -493,34 +496,18 @@ let sqFootX = 0, sqFootY = 0;                 // current foot anchor (feet touch
 let sqStartFX = 0, sqStartFY = 0, sqTargetFX = 0, sqTargetFY = 0;
 let sqJumpT = 0, sqJumpDur = 760;
 let sqJumpStart = 0, sqPreJumpStart = 0, sqLandStart = 0;
-let sqIdleTimer = 0, sqIdlePause = 3000;
+let sqIdleTimer = 0, sqIdlePause = 2000;
 let sqBobOffset = 0;
 let sqFacing    = 1;          // 1=right, -1=left
 let panelPositions = [];
 let squirrelReady  = false;
 
-/* Load sprite sheet & chroma-key the white background to transparent */
+/* Load the (already transparent) sprite sheet */
 function loadSquirrelSheet(cb) {
   const img = new Image();
-  img.onload = () => {
-    const c = document.createElement('canvas');
-    c.width = img.naturalWidth;
-    c.height = img.naturalHeight;
-    const ctx = c.getContext('2d');
-    ctx.drawImage(img, 0, 0);
-    const data = ctx.getImageData(0, 0, c.width, c.height);
-    const d = data.data;
-    for (let i = 0; i < d.length; i += 4) {
-      /* near-white → transparent */
-      if (d[i] > 232 && d[i + 1] > 232 && d[i + 2] > 232) d[i + 3] = 0;
-    }
-    ctx.putImageData(data, 0, 0);
-    sqSheet = c;
-    sqSheetReady = true;
-    cb && cb();
-  };
+  img.onload = () => { sqSheet = img; sqSheetReady = true; cb && cb(); };
   img.onerror = () => { sqSheetReady = false; };
-  img.src = 'squirrel_sprite.png';
+  img.src = 'squirrel.webp';
 }
 
 function updatePanelPositions() {
@@ -635,7 +622,7 @@ function tickSquirrel(now) {
     if (t >= 1) {
       sqState = 'idle';
       sqIdleTimer = 0;
-      sqIdlePause = rand(3333, 5333);
+      sqIdlePause = rand(2000, 3500);
     }
   }
 }
@@ -663,7 +650,7 @@ function drawSquirrel(ctx, canvas) {
   ctx.translate(footX * dpr, footY * dpr);
   if (sqFacing === -1) ctx.scale(-1, 1);
   /* draw so bottom-center of frame sits at the foot point */
-  ctx.drawImage(sqSheet, f.x, f.y, f.w, f.h, -dw / 2, -dh, dw, dh);
+  ctx.drawImage(sqSheet, f.x, f.y, f.w, f.h, -dw / 2, -dh + SQ_PAD_PX * dpr, dw, dh);
   ctx.restore();
 }
 

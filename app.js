@@ -713,37 +713,51 @@ function renderProjects() {
 }
 
 /* Desktop only: give every project card the same size without truncating
-   text, and size the thumbnails to fill whatever vertical space is left so
-   all cards fit inside the full-height projects pane. Cards are flex
-   columns, so the link row stays pinned to the bottom. */
+   text. Thumbnails use one fixed aspect ratio (THUMB_RATIO, matching the
+   alloy diagram cover so it is never cropped). If the pane is too short
+   for all cards at full width, the grid is narrowed step by step until
+   every card fits in the full-height projects pane without scrolling. */
 const EQUAL_CARDS_MQ = window.matchMedia('(min-width: 1101px)');
-const THUMB_MIN = 100;   // never shrink thumbnails into thin strips
+const THUMB_RATIO = 600 / 336;   // width / height of projects/jei/cover.png
+const GRID_MIN_W = 820;          // never squeeze the grid narrower than this
 function equalizeCardHeights() {
+  const grid   = document.getElementById('projects-grid');
   const cards  = [...document.querySelectorAll('.project-card')];
   const thumbs = cards.map(c => c.querySelector('.card-thumb')).filter(Boolean);
+  if (!grid) return;
+  grid.style.maxWidth = ''; grid.style.margin = '';
   cards.forEach(c => { c.style.height = ''; });
   thumbs.forEach(t => { t.style.height = ''; t.style.aspectRatio = ''; });
   if (!EQUAL_CARDS_MQ.matches || !cards.length) return;
 
-  /* 1. Measure the text-only height of the tallest card. */
-  thumbs.forEach(t => { t.style.aspectRatio = 'auto'; t.style.height = '0px'; });
-  const textH = Math.max(...cards.map(c => c.offsetHeight));
-  cards.forEach(c => { c.style.height = textH + 'px'; });
-
-  /* 2. Work out the space taken by the heading and row gaps. */
   const section = document.getElementById('projects');
-  const tops = [...new Set(cards.map(c => Math.round(c.getBoundingClientRect().top)))].sort((a, b) => a - b);
-  const rows = tops.length;
-  const above = tops[0] - section.getBoundingClientRect().top;
-  const rowSpacing = rows > 1 ? (tops[1] - tops[0] - textH) : 0;
+  const avail = section.clientHeight - 10;   // pane is 100vh on desktop
 
-  /* 3. Hand the leftover height to the thumbnails. */
-  const avail = section.clientHeight - 14;   // pane is 100vh on desktop
-  const perCard = (avail - above - (rows - 1) * rowSpacing) / rows;
-  const maxThumb = thumbs[0].offsetWidth / 1.6;  // don't go taller than 16:10
-  const thumbH = Math.round(clamp(perCard - textH, THUMB_MIN, maxThumb));
-  thumbs.forEach(t => { t.style.height = thumbH + 'px'; });
-  cards.forEach(c => { c.style.height = (textH + thumbH) + 'px'; });
+  /* Lay out at the current grid width; returns total height used. */
+  function layout() {
+    cards.forEach(c => { c.style.height = ''; });
+    thumbs.forEach(t => { t.style.aspectRatio = 'auto'; t.style.height = '0px'; });
+    const textH = Math.max(...cards.map(c => c.offsetHeight));
+    const thumbH = Math.round(thumbs[0].offsetWidth / THUMB_RATIO);
+    thumbs.forEach(t => { t.style.height = thumbH + 'px'; });
+    cards.forEach(c => { c.style.height = (textH + thumbH) + 'px'; });
+    const last = cards[cards.length - 1].getBoundingClientRect().bottom;
+    return last - section.getBoundingClientRect().top + section.scrollTop;
+  }
+
+  /* Narrow until it fits. Narrower cards wrap more text, so on very short
+     screens it may never fit; then keep whichever width overflowed least
+     (the pane scrolls a little as a fallback). */
+  const fullW = grid.offsetWidth;
+  grid.style.margin = '0 auto';
+  let best = { w: fullW, over: layout() - avail };
+  for (let w = fullW - 16; best.over > 0 && w >= GRID_MIN_W; w -= 16) {
+    grid.style.maxWidth = w + 'px';
+    const over = layout() - avail;
+    if (over < best.over) best = { w, over };
+  }
+  grid.style.maxWidth = best.w === fullW ? '' : best.w + 'px';
+  layout();
 }
 let equalizeTimer;
 window.addEventListener('resize', () => {

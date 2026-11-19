@@ -648,7 +648,7 @@ footer {
   }
   /* Thumbnail height follows the viewport height so both rows of cards
      fit on shorter laptop screens without cutting any text. */
-  .card-thumb { aspect-ratio: auto; height: clamp(64px, calc(50vh - 300px), 165px); margin-bottom: 0.6rem; }
+  .card-thumb { aspect-ratio: auto; height: clamp(64px, calc(50vh - 300px), 165px); width: calc(100% + 0.9rem); margin: 0 -0.45rem 0.6rem; }
   .project-title {
     font-size: 0.98rem;
     margin-bottom: 0.3rem;

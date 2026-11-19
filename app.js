@@ -1,6 +1,6 @@
 /* ============================================================
    PORTFOLIO — app.js
-   Grand tree · Falling leaves · Cherry petals · Pixel squirrel
+   Sidebar layout · Cherry petals · Pixel squirrel
    ============================================================ */
 
 'use strict';
@@ -345,189 +345,6 @@ const lerp    = (a, b, t) => a + (b - a) * t;
 const easeInOutQuad = t => t < 0.5 ? 2*t*t : 1-(-2*t+2)**2/2;
 const easeOutBack   = t => { const c1=1.70158, c3=c1+1; return 1+c3*(t-1)**3+c1*(t-1)**2; };
 const easeInQuad    = t => t * t;
-
-/* ============================================================
-   A. TREE — large_tree.png rendered statically on a canvas.
-   Leaves spawn from positions within the tree's screen area and
-   fall independently; the tree image is never modified.
-   ============================================================ */
-let treeCanvas, treeCtx;
-let treeReady     = false;
-let treeSpawnArea = null;   // cached {x,y,w,h} in leaves-canvas coordinates
-
-/* Call this after any layout change so spawnLeaf always has fresh bounds. */
-function updateTreeSpawnArea() {
-  if (!treeCanvas || !leavesCanvas) return;
-  const tr = treeCanvas.getBoundingClientRect();
-  const lr = leavesCanvas.getBoundingClientRect();
-  if (tr.width === 0 || lr.width === 0) { treeSpawnArea = null; return; }
-  treeSpawnArea = {
-    x: tr.left - lr.left,
-    y: tr.top  - lr.top,
-    w: tr.width,
-    h: tr.height,
-  };
-}
-
-function buildTree(cb) {
-  treeCanvas = document.getElementById('tree-canvas');
-  if (!treeCanvas) { cb && cb(); return; }
-  treeCtx = treeCanvas.getContext('2d');
-
-  const img = new Image();
-  img.onload = () => {
-    treeCanvas.width  = img.naturalWidth;
-    treeCanvas.height = img.naturalHeight;
-    treeCtx.imageSmoothingEnabled = false;
-    treeCtx.drawImage(img, 0, 0);
-    treeReady = true;
-    /* Wait one rAF so the browser has finalised layout before measuring. */
-    requestAnimationFrame(() => { updateTreeSpawnArea(); cb && cb(); });
-  };
-  img.onerror = () => { treeReady = false; cb && cb(); };
-  img.src = 'large_tree.png';
-}
-
-/* ============================================================
-   B. FALLING LEAVES
-   Organic ellipse/teardrop shapes — colours sampled from the real
-   block they detached from. Same Lissajous flutter physics.
-   ============================================================ */
-const MAX_LEAVES   = 60;
-let leaves         = [];
-let leafSpawnTimer = 0;
-
-/* Small pixel-art leaf silhouettes — each is a cluster of tiny blocks
-   arranged in an irregular shape (L, T, S, Z, cross, etc.), matching the
-   voxel aesthetic of the tree. Each leaf instance picks one pattern and
-   one colour, then tumbles with the same Lissajous physics. */
-const LEAF_PATTERNS = [
-  /* Each pattern = array of [col, row] offsets for a 3×3 pixel block */
-  [[0,0],[1,0],[0,1]],                      // mini-L
-  [[0,0],[1,0],[1,1]],                      // mini-J
-  [[1,0],[0,1],[1,1]],                      // mini-S
-  [[0,0],[0,1],[1,1]],                      // mini-Z
-  [[0,0],[1,0],[2,0]],                      // mini-I (horiz)
-  [[0,0],[0,1],[0,2]],                      // mini-I (vert)
-  [[1,0],[0,1],[1,1],[0,2]],               // S-tall
-  [[0,0],[1,0],[1,1],[2,1]],               // Z-tall
-  [[0,0],[1,0],[0,1],[1,1]],               // 2×2 square
-  [[0,0],[1,0],[2,0],[1,1]],               // T-top
-  [[1,0],[0,1],[1,1],[1,2]],               // T-right
-  [[0,0],[1,0],[2,0],[0,1],[1,1],[2,1]],   // 3×2 block
-  [[0,0],[1,0],[0,1],[0,2]],               // L-long
-  [[0,0],[0,1],[0,2],[1,2]],               // J-long
-  [[0,0],[1,0],[0,1],[1,2]],               // sparse irregular
-  [[0,0],[2,0],[1,1],[0,2],[2,2]],         // X-cross
-];
-
-class Leaf {
-  constructor(sp) {
-    this.x = sp.x + rand(-6, 6);
-    this.y = sp.y + rand(-4, 4);
-
-    /* Pick a random pixel pattern and scale it */
-    this.pattern = LEAF_PATTERNS[randInt(0, LEAF_PATTERNS.length - 1)];
-    this.ps = rand(3.5, 6.5);   // pixel block size in canvas px
-
-    /* Center the pattern so it rotates around its centroid */
-    const xs = this.pattern.map(p => p[0]);
-    const ys = this.pattern.map(p => p[1]);
-    const cx = (Math.min(...xs) + Math.max(...xs)) / 2;
-    const cy = (Math.min(...ys) + Math.max(...ys)) / 2;
-    this.offsets = this.pattern.map(([c, r]) => [
-      (c - cx) * this.ps,
-      (r - cy) * this.ps,
-    ]);
-
-    /* Colour from the shed tree block */
-    this.color = sp.color;
-    const m = sp.color.match(/\d+/g) || ['80','180','80'];
-    const r = +m[0], g = +m[1], b = +m[2];
-    /* Highlight: brighter version for top-left pixels */
-    this.hiColor = `rgb(${Math.min(255,r+60)},${Math.min(255,g+60)},${Math.min(255,b+45)})`;
-    /* Shadow: darker for bottom-right pixels */
-    this.shColor = `rgb(${Math.round(r*.45)},${Math.round(g*.45)},${Math.round(b*.45)})`;
-
-    /* Physics */
-    this.vx   = rand(-1.3, 1.3);
-    this.vy   = rand(0.20, 0.80);
-    this.grav = rand(0.008, 0.022);
-    this.drag = rand(0.987, 0.997);
-    this.rot     = rand(0, Math.PI * 2);
-    this.rotV    = rand(0.025, 0.085) * (Math.random() < 0.5 ? 1 : -1);
-    this.rotDrag = rand(0.979, 0.994);
-    this.sp1 = rand(0, Math.PI * 2);
-    this.sp2 = rand(0, Math.PI * 2);
-    this.sa1 = rand(0.5, 1.2);
-    this.sa2 = rand(0.2, 0.6);
-    this.alpha  = 0;
-    this.active = true;
-  }
-
-  update(frame) {
-    if (!this.active) return;
-    const sway = this.sa1 * Math.sin(frame * 0.018 + this.sp1)
-               + this.sa2 * Math.sin(frame * 0.038 + this.sp2);
-    this.vx  = (this.vx + sway * 0.05) * this.drag;
-    this.vy  =  this.vy * this.drag + this.grav;
-    this.x  += this.vx + sway * 0.5;
-    this.y  += this.vy;
-    this.rotV *= this.rotDrag;
-    this.rot  += this.rotV;
-    this.alpha = Math.min(0.95, this.alpha + 0.07);
-    const H = leavesCanvas ? leavesCanvas.height : 800;
-    if (this.y > H * 0.72) this.alpha -= 0.014;
-    if (this.alpha <= 0 || this.y > H + 30) this.active = false;
-  }
-
-  draw(ctx) {
-    if (!this.active || this.alpha <= 0) return;
-    const ps = this.ps;
-    const e  = Math.max(1, ps * 0.22);   // voxel edge strip width
-
-    ctx.save();
-    ctx.globalAlpha = Math.max(0, this.alpha);
-    ctx.translate(this.x, this.y);
-    ctx.rotate(this.rot);
-
-    for (const [ox, oy] of this.offsets) {
-      /* Main face */
-      ctx.fillStyle = this.color;
-      ctx.fillRect(ox, oy, ps - 0.5, ps - 0.5);
-      /* Top + left highlight — voxel lit-from-top-left */
-      ctx.fillStyle = this.hiColor;
-      ctx.fillRect(ox, oy, ps - 0.5, e);          // top
-      ctx.fillRect(ox, oy, e, ps - 0.5);          // left
-      /* Bottom + right shadow */
-      ctx.fillStyle = this.shColor;
-      ctx.fillRect(ox, oy + ps - e - 0.5, ps - 0.5, e); // bottom
-      ctx.fillRect(ox + ps - e - 0.5, oy, e, ps - 0.5); // right
-    }
-
-    ctx.restore();
-  }
-}
-
-const LEAF_COLORS = [
-  'rgb(80,160,60)','rgb(90,180,70)','rgb(100,170,50)',
-  'rgb(70,150,55)','rgb(110,190,65)','rgb(85,165,45)',
-  'rgb(75,155,75)','rgb(120,185,60)','rgb(95,175,80)',
-  'rgb(65,140,50)','rgb(105,195,55)','rgb(130,200,70)',
-];
-
-function spawnLeaf() {
-  if (leaves.length >= MAX_LEAVES || !treeReady || !treeSpawnArea) return;
-  const { x, y, w, h } = treeSpawnArea;
-  const sp = {
-    x:     x + rand(w * 0.10, w * 0.90),
-    y:     y + rand(h * 0.05, h * 0.65),
-    color: LEAF_COLORS[randInt(0, LEAF_COLORS.length - 1)],
-  };
-  leaves.push(new Leaf(sp));
-}
-
-function initLeaves() { leaves = []; }
 
 /* ============================================================
    C. CHERRY BLOSSOM PETALS
@@ -926,16 +743,38 @@ function renderProjects() {
   initCardVideoPlayback(grid);
 }
 
-/* Desktop only: make every project card as tall as the tallest one, so
-   the grid reads as uniform tiles without truncating any text. Cards are
-   flex columns, so the link row stays pinned to the bottom. */
+/* Desktop only: give every project card the same size without truncating
+   text, and size the thumbnails to fill whatever vertical space is left so
+   all cards fit inside the full-height projects pane. Cards are flex
+   columns, so the link row stays pinned to the bottom. */
 const EQUAL_CARDS_MQ = window.matchMedia('(min-width: 1101px)');
+const THUMB_MIN = 100;   // never shrink thumbnails into thin strips
 function equalizeCardHeights() {
-  const cards = document.querySelectorAll('.project-card');
+  const cards  = [...document.querySelectorAll('.project-card')];
+  const thumbs = cards.map(c => c.querySelector('.card-thumb')).filter(Boolean);
   cards.forEach(c => { c.style.height = ''; });
+  thumbs.forEach(t => { t.style.height = ''; t.style.aspectRatio = ''; });
   if (!EQUAL_CARDS_MQ.matches || !cards.length) return;
-  const tallest = Math.max(...[...cards].map(c => c.offsetHeight));
-  cards.forEach(c => { c.style.height = tallest + 'px'; });
+
+  /* 1. Measure the text-only height of the tallest card. */
+  thumbs.forEach(t => { t.style.aspectRatio = 'auto'; t.style.height = '0px'; });
+  const textH = Math.max(...cards.map(c => c.offsetHeight));
+  cards.forEach(c => { c.style.height = textH + 'px'; });
+
+  /* 2. Work out the space taken by the heading and row gaps. */
+  const section = document.getElementById('projects');
+  const tops = [...new Set(cards.map(c => Math.round(c.getBoundingClientRect().top)))].sort((a, b) => a - b);
+  const rows = tops.length;
+  const above = tops[0] - section.getBoundingClientRect().top;
+  const rowSpacing = rows > 1 ? (tops[1] - tops[0] - textH) : 0;
+
+  /* 3. Hand the leftover height to the thumbnails. */
+  const avail = section.clientHeight - 14;   // pane is 100vh on desktop
+  const perCard = (avail - above - (rows - 1) * rowSpacing) / rows;
+  const maxThumb = thumbs[0].offsetWidth / 1.6;  // don't go taller than 16:10
+  const thumbH = Math.round(clamp(perCard - textH, THUMB_MIN, maxThumb));
+  thumbs.forEach(t => { t.style.height = thumbH + 'px'; });
+  cards.forEach(c => { c.style.height = (textH + thumbH) + 'px'; });
 }
 let equalizeTimer;
 window.addEventListener('resize', () => {
@@ -967,40 +806,17 @@ function initCardVideoPlayback(grid) {
 }
 
 /* ============================================================
-   F. NAVBAR
-   ============================================================ */
-function initNavbar() {
-  const nav = document.getElementById('navbar');
-  let ticking = false;
-  window.addEventListener('scroll', () => {
-    if (!ticking) {
-      requestAnimationFrame(() => {
-        nav.classList.toggle('scrolled', window.scrollY > 50);
-        ticking = false;
-      });
-      ticking = true;
-    }
-  }, { passive: true });
-}
-
-/* ============================================================
    G. CANVAS SETUP + MAIN LOOP
    ============================================================ */
-const leavesCanvas   = document.getElementById('leaves-canvas');
 const petalsCanvas   = document.getElementById('petals-canvas');
 const squirrelCanvas = document.getElementById('squirrel-canvas');
-let leavesCtx, petalsCtx, squirrelCtx;
+let petalsCtx, squirrelCtx;
 let frame = 0;
 let petalsVisible = false;
 
 function resizeCanvases() {
-  const landing  = document.getElementById('landing');
   const projects = document.getElementById('projects');
 
-  if (leavesCanvas && landing) {
-    leavesCanvas.width  = landing.offsetWidth;
-    leavesCanvas.height = landing.offsetHeight;
-  }
   if (petalsCanvas && projects) {
     petalsCanvas.width  = projects.offsetWidth;
     petalsCanvas.height = projects.offsetHeight;
@@ -1014,23 +830,10 @@ function resizeCanvases() {
   }
 
   updatePanelPositions();
-  updateTreeSpawnArea();
 }
 
 function loop(now) {
   frame++;
-
-  /* Leaves — spawn from tree area, fall with physics */
-  if (leavesCtx && leavesCanvas.width) {
-    leavesCtx.clearRect(0, 0, leavesCanvas.width, leavesCanvas.height);
-    leafSpawnTimer++;
-    if (leafSpawnTimer >= 22) {   // ~3 leaves/sec — gentle shedding rate
-      leafSpawnTimer = 0;
-      spawnLeaf();
-    }
-    leaves = leaves.filter(l => l.active);
-    for (const l of leaves) { l.update(frame); l.draw(leavesCtx); }
-  }
 
   /* Petals + pile */
   if (petalsCtx && petalsVisible && petalsCanvas.width) {
@@ -1062,16 +865,11 @@ function initPetalsObserver() {
 function init() {
   renderProjects();
 
-  if (leavesCanvas)   leavesCtx   = leavesCanvas.getContext('2d');
   if (petalsCanvas)   petalsCtx   = petalsCanvas.getContext('2d');
   if (squirrelCanvas) squirrelCtx = squirrelCanvas.getContext('2d');
 
   resizeCanvases();
-  initLeaves();
   if (petalsCanvas) initPetals(petalsCanvas);
-
-  /* Build the tree canvas with branch network behind the image */
-  buildTree();
 
   /* Load squirrel sprite sheet, then enable once panels are measured */
   loadSquirrelSheet(() => {
@@ -1083,7 +881,6 @@ function init() {
     }
   });
 
-  initNavbar();
   initPetalsObserver();
 
   let rTimer;
@@ -1091,7 +888,6 @@ function init() {
     clearTimeout(rTimer);
     rTimer = setTimeout(() => {
       resizeCanvases();
-      initLeaves();
     }, 200);
   }, { passive: true });
 
